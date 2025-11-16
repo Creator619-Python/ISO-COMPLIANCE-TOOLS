@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO/IEC 27001:2022 ISMS Compliance Dashboard</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --security: #2ecc71;
+        }
+        
+        .btn-selected {
+            opacity: 0.9;
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .clause-item {
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .clause-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .clause-header {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .clause-metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: var(--light);
+            border-radius: 8px;
+        }
+        .compliance-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .evidence-box {
+            margin: 15px 0;
+        }
+        .remarks-box {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 8px;
+            border-left: 4px solid var(--warning);
+        }
+        .section-divider {
+            border-top: 3px solid var(--security);
+            margin: 25px 0;
+            padding-top: 20px;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .progress-container {
+            margin: 10px 0;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+        .dashboard-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .filter-buttons {
+            margin-bottom: 20px;
+        }
+        .clause-priority {
+            font-size: 0.9rem;
+            padding: 3px 8px;
+            border-radius: 8px;
+            margin-left: 10px;
+        }
+        .priority-high { background: var(--danger); color: white; }
+        .priority-medium { background: var(--warning); color: black; }
+        .priority-low { background: var(--success); color: white; }
+        .control-category {
+            background: #f8f9fa;
+            border-left: 4px solid var(--security);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .clause-metadata {
+                grid-template-columns: 1fr;
+            }
+            .compliance-buttons {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="text-center mb-4">
+            <h1 class="display-4" style="color: var(--security);">
+                <i class="fas fa-shield-alt"></i> ISO/IEC 27001:2022 ISMS Compliance Dashboard
+            </h1>
+            <p class="lead">Information Security Management System Compliance Tracking Tool</p>
+        </div>
+
+        <!-- Dashboard Summary -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="totalClauses">0</h3>
+                    <p class="text-muted">Total Clauses</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="compliantCount" style="color: var(--success);">0</h3>
+                    <p class="text-muted">Compliant</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="nonCompliantCount" style="color: var(--danger);">0</h3>
+                    <p class="text-muted">Non-Compliant</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="compliancePercentage">0%</h3>
+                    <p class="text-muted">Overall Compliance</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="dashboard-card text-center">
+                    <h4 id="controlsImplemented">0</h4>
+                    <p class="text-muted">Annex A Controls</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-card text-center">
+                    <h4 id="riskAssessments">0</h4>
+                    <p class="text-muted">Risk Assessments</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-card text-center">
+                    <h4 id="securityIncidents">0</h4>
+                    <p class="text-muted">Security Incidents</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-buttons">
+            <button class="btn btn-outline-primary btn-sm" onclick="filterClauses('all')">
+                <i class="fas fa-list"></i> All Clauses
+            </button>
+            <button class="btn btn-outline-success btn-sm" onclick="filterClauses('compliant')">
+                <i class="fas fa-check-circle"></i> Compliant
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="filterClauses('nonCompliant')">
+                <i class="fas fa-exclamation-circle"></i> Non-Compliant
+            </button>
+            <button class="btn btn-outline-warning btn-sm" onclick="filterClauses('partial')">
+                <i class="fas fa-minus-circle"></i> Partial
+            </button>
+            <button class="btn btn-outline-info btn-sm" onclick="filterClauses('notSet')">
+                <i class="fas fa-question-circle"></i> Not Set
+            </button>
+        </div>
+
+        <!-- Clause List Container -->
+        <div id="clauseList" class="mb-4"></div>
+
+        <!-- Annex A Controls Section -->
+        <div class="dashboard-card mt-4">
+            <h4><i class="fas fa-list-alt"></i> Annex A - Information Security Controls</h4>
+            <div class="control-categories mt-3" id="annexAControls"></div>
+        </div>
+
+        <!-- Chart and Actions Section -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <canvas id="complianceChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <canvas id="sectionChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <button class="btn btn-primary btn-lg mb-3 mr-3" onclick="checkCompliance()">
+                    <i class="fas fa-sync-alt"></i> Update Compliance Status
+                </button>
+                <button class="btn btn-success btn-lg mb-3 mr-3" onclick="downloadReport()">
+                    <i class="fas fa-download"></i> Download ISMS Report
+                </button>
+                <button class="btn btn-info btn-lg mb-3" onclick="exportData()">
+                    <i class="fas fa-file-export"></i> Export Data
+                </button>
+                <button class="btn btn-warning btn-lg mb-3" onclick="clearAllData()">
+                    <i class="fas fa-trash"></i> Clear All Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Action Items Section -->
+        <div class="dashboard-card mt-4">
+            <h4><i class="fas fa-tasks"></i> Security Action Items & Due Dates</h4>
+            <div id="actionItems" class="mt-3"></div>
+        </div>
+
+        <!-- Security Recommendations Section -->
+        <div class="dashboard-card mt-4">
+            <h4><i class="fas fa-lightbulb"></i> ISMS Improvement Recommendations</h4>
+            <ul id="recommendationList" class="list-group mt-3"></ul>
+        </div>
+    </div>
+
+    <script>
+        // ISO/IEC 27001:2022 Clauses Data
+        const clauses = [
+            // Clause 4: Context of the organization
+            { id: 'contextOrg', name: '4.1 Understanding organization context', section: 'Context', priority: 'high', description: 'Determine external/internal issues affecting ISMS' },
+            { id: 'interestedParties', name: '4.2 Understanding interested parties', section: 'Context', priority: 'high', description: 'Determine relevant stakeholders and requirements' },
+            { id: 'scopeISMS', name: '4.3 Determining ISMS scope', section: 'Context', priority: 'medium', description: 'Define ISMS boundaries and applicability' },
+            { id: 'ismsGeneral', name: '4.4 Information security management system', section: 'Context', priority: 'high', description: 'Establish, implement and maintain ISMS' },
+            
+            // Clause 5: Leadership
+            { id: 'leadershipCommitment', name: '5.1 Leadership and commitment', section: 'Leadership', priority: 'high', description: 'Top management demonstration of leadership' },
+            { id: 'securityPolicy', name: '5.2 Information security policy', section: 'Leadership', priority: 'high', description: 'Establish and maintain information security policy' },
+            { id: 'rolesResponsibilities', name: '5.3 Organizational roles and authorities', section: 'Leadership', priority: 'medium', description: 'Define and communicate roles/responsibilities' },
+            
+            // Clause 6: Planning
+            { id: 'riskOpportunity', name: '6.1 Actions for risks and opportunities', section: 'Planning', priority: 'high', description: 'Address risks and opportunities in planning' },
+            { id: 'riskAssessment', name: '6.1.2 Information security risk assessment', section: 'Planning', priority: 'high', description: 'Define and apply risk assessment process' },
+            { id: 'riskTreatment', name: '6.1.3 Information security risk treatment', section: 'Planning', priority: 'high', description: 'Define and apply risk treatment process' },
+            { id: 'securityObjectives', name: '6.2 Information security objectives', section: 'Planning', priority: 'medium', description: 'Establish information security objectives' },
+            { id: 'planningChanges', name: '6.3 Planning of changes', section: 'Planning', priority: 'medium', description: 'Plan changes to ISMS' },
+            
+            // Clause 7: Support
+            { id: 'resources', name: '7.1 Resources', section: 'Support', priority: 'medium', description: 'Determine and provide necessary resources' },
+            { id: 'competence', name: '7.2 Competence', section: 'Support', priority: 'medium', description: 'Ensure personnel competence' },
+            { id: 'awareness', name: '7.3 Awareness', section: 'Support', priority: 'low', description: 'Ensure awareness of ISMS requirements' },
+            { id: 'communication', name: '7.4 Communication', section: 'Support', priority: 'medium', description: 'Establish internal/external communication' },
+            { id: 'documentedInfo', name: '7.5 Documented information', section: 'Support', priority: 'medium', description: 'Control documented information' },
+            
+            // Clause 8: Operation
+            { id: 'operationalControl', name: '8.1 Operational planning and control', section: 'Operation', priority: 'high', description: 'Plan and control operational processes' },
+            { id: 'riskAssessmentOp', name: '8.2 Information security risk assessment', section: 'Operation', priority: 'high', description: 'Perform risk assessments at planned intervals' },
+            { id: 'riskTreatmentOp', name: '8.3 Information security risk treatment', section: 'Operation', priority: 'high', description: 'Implement risk treatment plan' },
+            
+            // Clause 9: Performance evaluation
+            { id: 'monitoringMeasurement', name: '9.1 Monitoring, measurement, analysis and evaluation', section: 'Performance', priority: 'medium', description: 'Monitor, measure, analyze and evaluate' },
+            { id: 'internalAudit', name: '9.2 Internal audit', section: 'Performance', priority: 'medium', description: 'Conduct internal audits' },
+            { id: 'managementReview', name: '9.3 Management review', section: 'Performance', priority: 'high', description: 'Top management review of ISMS' },
+            
+            // Clause 10: Improvement
+            { id: 'continualImprovement', name: '10.1 Continual improvement', section: 'Improvement', priority: 'medium', description: 'Continually improve ISMS' },
+            { id: 'nonconformityAction', name: '10.2 Nonconformity and corrective action', section: 'Improvement', priority: 'high', description: 'Handle nonconformities and corrective actions' }
+        ];
+
+        // Annex A Controls
+        const annexAControls = [
+            {
+                category: "5 - Organizational Controls",
+                controls: [
+                    { id: '5.1', name: 'Policies for information security', implemented: false },
+                    { id: '5.2', name: 'Information security roles and responsibilities', implemented: false },
+                    { id: '5.3', name: 'Segregation of duties', implemented: false },
+                    { id: '5.4', name: 'Management responsibilities', implemented: false },
+                    { id: '5.5', name: 'Contact with authorities', implemented: false },
+                    { id: '5.6', name: 'Contact with special interest groups', implemented: false },
+                    { id: '5.7', name: 'Threat intelligence', implemented: false },
+                    { id: '5.8', name: 'Information security in project management', implemented: false },
+                    { id: '5.9', name: 'Inventory of information and other associated assets', implemented: false },
+                    { id: '5.10', name: 'Acceptable use of information and other associated assets', implemented: false },
+                    { id: '5.11', name: 'Return of assets', implemented: false },
+                    { id: '5.12', name: 'Classification of information', implemented: false },
+                    { id: '5.13', name: 'Labelling of information', implemented: false },
+                    { id: '5.14', name: 'Information transfer', implemented: false },
+                    { id: '5.15', name: 'Access control', implemented: false },
+                    { id: '5.16', name: 'Identity management', implemented: false },
+                    { id: '5.17', name: 'Authentication information', implemented: false },
+                    { id: '5.18', name: 'Access rights', implemented: false },
+                    { id: '5.19', name: 'Information security in supplier relationships', implemented: false },
+                    { id: '5.20', name: 'Addressing information security within supplier agreements', implemented: false },
+                    { id: '5.21', name: 'Managing information security in the ICT supply chain', implemented: false },
+                    { id: '5.22', name: 'Monitoring, review of supplier services', implemented: false },
+                    { id: '5.23', name: 'Information security for use of cloud services', implemented: false },
+                    { id: '5.24', name: 'Information security incident management planning', implemented: false },
+                    { id: '5.25', name: 'Assessment of information security events', implemented: false },
+                    { id: '5.26', name: 'Response to information security incidents', implemented: false },
+                    { id: '5.27', name: 'Learning from information security incidents', implemented: false },
+                    { id: '5.28', name: 'Collection of evidence', implemented: false },
+                    { id: '5.29', name: 'Information security during disruption', implemented: false },
+                    { id: '5.30', name: 'ICT readiness for business continuity', implemented: false },
+                    { id: '5.31', name: 'Legal and regulatory requirements', implemented: false },
+                    { id: '5.32', name: 'Intellectual property rights', implemented: false },
+                    { id: '5.33', name: 'Protection of records', implemented: false },
+                    { id: '5.34', name: 'Privacy and protection of PII', implemented: false },
+                    { id: '5.35', name: 'Independent review of information security', implemented: false },
+                    { id: '5.36', name: 'Compliance with policies and standards', implemented: false },
+                    { id: '5.37', name: 'Documented operating procedures', implemented: false }
+                ]
+            },
+            {
+                category: "6 - People Controls",
+                controls: [
+                    { id: '6.1', name: 'Screening', implemented: false },
+                    { id: '6.2', name: 'Terms and conditions of employment', implemented: false },
+                    { id: '6.3', name: 'Information security awareness, education and training', implemented: false },
+                    { id: '6.4', name: 'Disciplinary process', implemented: false },
+                    { id: '6.5', name: 'Responsibilities after termination', implemented: false },
+                    { id: '6.6', name: 'Confidentiality agreements', implemented: false },
+                    { id: '6.7', name: 'Remote working', implemented: false },
+                    { id: '6.8', name: 'Information security event reporting', implemented: false }
+                ]
+            },
+            {
+                category: "7 - Physical Controls",
+                controls: [
+                    { id: '7.1', name: 'Physical security perimeters', implemented: false },
+                    { id: '7.2', name: 'Physical entry', implemented: false },
+                    { id: '7.3', name: 'Securing offices, rooms and facilities', implemented: false },
+                    { id: '7.4', name: 'Physical security monitoring', implemented: false },
+                    { id: '7.5', name: 'Protecting against physical threats', implemented: false },
+                    { id: '7.6', name: 'Working in secure areas', implemented: false },
+                    { id: '7.7', name: 'Clear desk and clear screen', implemented: false },
+                    { id: '7.8', name: 'Equipment siting and protection', implemented: false },
+                    { id: '7.9', name: 'Security of assets off-premises', implemented: false },
+                    { id: '7.10', name: 'Storage media', implemented: false },
+                    { id: '7.11', name: 'Supporting utilities', implemented: false },
+                    { id: '7.12', name: 'Cabling security', implemented: false },
+                    { id: '7.13', name: 'Equipment maintenance', implemented: false },
+                    { id: '7.14', name: 'Secure disposal of equipment', implemented: false }
+                ]
+            },
+            {
+                category: "8 - Technological Controls",
+                controls: [
+                    { id: '8.1', name: 'User end point devices', implemented: false },
+                    { id: '8.2', name: 'Privileged access rights', implemented: false },
+                    { id: '8.3', name: 'Information access restriction', implemented: false },
+                    { id: '8.4', name: 'Access to source code', implemented: false },
+                    { id: '8.5', name: 'Secure authentication', implemented: false },
+                    { id: '8.6', name: 'Capacity management', implemented: false },
+                    { id: '8.7', name: 'Protection against malware', implemented: false },
+                    { id: '8.8', name: 'Management of technical vulnerabilities', implemented: false },
+                    { id: '8.9', name: 'Configuration management', implemented: false },
+                    { id: '8.10', name: 'Information deletion', implemented: false },
+                    { id: '8.11', name: 'Data masking', implemented: false },
+                    { id: '8.12', name: 'Data leakage prevention', implemented: false },
+                    { id: '8.13', name: 'Information backup', implemented: false },
+                    { id: '8.14', name: 'Redundancy of facilities', implemented: false },
+                    { id: '8.15', name: 'Logging', implemented: false },
+                    { id: '8.16', name: 'Monitoring activities', implemented: false },
+                    { id: '8.17', name: 'Clock synchronization', implemented: false },
+                    { id: '8.18', name: 'Use of privileged utility programs', implemented: false },
+                    { id: '8.19', name: 'Installation of software', implemented: false },
+                    { id: '8.20', name: 'Networks security', implemented: false },
+                    { id: '8.21', name: 'Security of network services', implemented: false },
+                    { id: '8.22', name: 'Segregation of networks', implemented: false },
+                    { id: '8.23', name: 'Web filtering', implemented: false },
+                    { id: '8.24', name: 'Use of cryptography', implemented: false },
+                    { id: '8.25', name: 'Secure development life cycle', implemented: false },
+                    { id: '8.26', name: 'Application security requirements', implemented: false },
+                    { id: '8.27', name: 'Secure system architecture', implemented: false },
+                    { id: '8.28', name: 'Secure coding', implemented: false },
+                    { id: '8.29', name: 'Security testing', implemented: false },
+                    { id: '8.30', name: 'Outsourced development', implemented: false },
+                    { id: '8.31', name: 'Separation of environments', implemented: false },
+                    { id: '8.32', name: 'Change management', implemented: false },
+                    { id: '8.33', name: 'Test information', implemented: false },
+                    { id: '8.34', name: 'Protection during audit testing', implemented: false }
+                ]
+            }
+        ];
+
+        // Global variables
+        let chartInstance;
+        let sectionChartInstance;
+        let complianceData = {};
+        let controlsData = {};
+
+        // Initialize the dashboard
+        function initDashboard() {
+            loadDataFromStorage();
+            renderClauses();
+            renderAnnexAControls();
+            checkCompliance();
+        }
+
+        // Load data from localStorage
+        function loadDataFromStorage() {
+            const savedComplianceData = localStorage.getItem('iso27001ComplianceData');
+            const savedControlsData = localStorage.getItem('iso27001ControlsData');
+            
+            if (savedComplianceData) {
+                complianceData = JSON.parse(savedComplianceData);
+            } else {
+                // Initialize empty data
+                clauses.forEach(clause => {
+                    complianceData[clause.id] = {
+                        compliance_status: '',
+                        remarks: '',
+                        evidence_link: '',
+                        review_frequency: '',
+                        last_review_date: '',
+                        next_review_date: '',
+                        responsibility: '',
+                        implementation_level: '',
+                        risk_level: '',
+                        statement_of_applicability: ''
+                    };
+                });
+            }
+
+            if (savedControlsData) {
+                controlsData = JSON.parse(savedControlsData);
+            } else {
+                // Initialize empty controls data
+                annexAControls.forEach(category => {
+                    category.controls.forEach(control => {
+                        controlsData[control.id] = {
+                            implemented: false,
+                            justification: '',
+                            implementation_date: '',
+                            responsible_party: '',
+                            review_date: ''
+                        };
+                    });
+                });
+            }
+        }
+
+        // Save data to localStorage
+        function saveDataToStorage() {
+            localStorage.setItem('iso27001ComplianceData', JSON.stringify(complianceData));
+            localStorage.setItem('iso27001ControlsData', JSON.stringify(controlsData));
+        }
+
+        // Render all clauses
+        function renderClauses() {
+            const clauseListContainer = document.getElementById('clauseList');
+            clauseListContainer.innerHTML = '';
+            let currentSection = '';
+            
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                
+                // Add section divider if section changed
+                if (clause.section !== currentSection) {
+                    currentSection = clause.section;
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'section-divider';
+                    sectionDiv.innerHTML = `
+                        <h4><i class="fas fa-folder-open"></i> ${currentSection}</h4>
+                        <p class="mb-0">ISO/IEC 27001:2022 ${currentSection} Requirements</p>
+                    `;
+                    clauseListContainer.appendChild(sectionDiv);
+                }
+
+                // Create clause item
+                const clauseItem = document.createElement('div');
+                clauseItem.className = 'clause-item';
+                clauseItem.id = `clause-${clause.id}`;
+                clauseItem.dataset.section = clause.section;
+                clauseItem.dataset.status = data.compliance_status || 'notSet';
+                
+                const priorityClass = `priority-${clause.priority}`;
+                
+                clauseItem.innerHTML = `
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="clause-header card-title">
+                                ${clause.name}
+                                <span class="clause-priority ${priorityClass}">${clause.priority.toUpperCase()}</span>
+                            </h5>
+                            <small class="text-muted">${clause.description}</small>
+                        </div>
+                        
+                        <div class="clause-metadata">
+                            <div class="form-group">
+                                <label for="frequency-${clause.id}"><small><strong><i class="fas fa-calendar-alt"></i> Review Frequency:</strong></small></label>
+                                <select id="frequency-${clause.id}" class="form-control form-control-sm" onchange="saveData('${clause.id}', 'review_frequency', this.value)">
+                                    <option value="">Select Frequency</option>
+                                    <option value="Monthly" ${data.review_frequency === 'Monthly' ? 'selected' : ''}>Monthly</option>
+                                    <option value="Quarterly" ${data.review_frequency === 'Quarterly' ? 'selected' : ''}>Quarterly</option>
+                                    <option value="Half-Yearly" ${data.review_frequency === 'Half-Yearly' ? 'selected' : ''}>Half-Yearly</option>
+                                    <option value="Yearly" ${data.review_frequency === 'Yearly' ? 'selected' : ''}>Yearly</option>
+                                    <option value="Management Review" ${data.review_frequency === 'Management Review' ? 'selected' : ''}>Management Review</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="implementation-${clause.id}"><small><strong><i class="fas fa-cog"></i> Implementation Level:</strong></small></label>
+                                <select id="implementation-${clause.id}" class="form-control form-control-sm" onchange="saveData('${clause.id}', 'implementation_level', this.value)">
+                                    <option value="">Select Level</option>
+                                    <option value="Fully Implemented" ${data.implementation_level === 'Fully Implemented' ? 'selected' : ''}>Fully Implemented</option>
+                                    <option value="Partially Implemented" ${data.implementation_level === 'Partially Implemented' ? 'selected' : ''}>Partially Implemented</option>
+                                    <option value="Planned" ${data.implementation_level === 'Planned' ? 'selected' : ''}>Planned</option>
+                                    <option value="Not Started" ${data.implementation_level === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastReview-${clause.id}"><small><strong><i class="fas fa-calendar-check"></i> Last Review:</strong></small></label>
+                                <input type="date" id="lastReview-${clause.id}" class="form-control form-control-sm" 
+                                       value="${data.last_review_date || ''}"
+                                       onchange="saveData('${clause.id}', 'last_review_date', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label for="nextReview-${clause.id}"><small><strong><i class="fas fa-calendar-plus"></i> Next Review:</strong></small></label>
+                                <input type="date" id="nextReview-${clause.id}" class="form-control form-control-sm" 
+                                       value="${data.next_review_date || ''}"
+                                       onchange="saveData('${clause.id}', 'next_review_date', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label for="responsibility-${clause.id}"><small><strong><i class="fas fa-user"></i> Responsibility:</strong></small></label>
+                                <input type="text" id="responsibility-${clause.id}" class="form-control form-control-sm" 
+                                       value="${data.responsibility || ''}"
+                                       placeholder="e.g., CISO" 
+                                       oninput="saveData('${clause.id}', 'responsibility', this.value)">
+                            </div>
+                        </div>
+
+                        ${clause.id.includes('risk') ? `
+                        <div class="risk-management-box mt-3 p-3 bg-light rounded">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Risk Management Data</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="risk-${clause.id}"><small><strong>Risk Level:</strong></small></label>
+                                        <select id="risk-${clause.id}" class="form-control form-control-sm" onchange="saveData('${clause.id}', 'risk_level', this.value)">
+                                            <option value="">Select Risk Level</option>
+                                            <option value="Low" ${data.risk_level === 'Low' ? 'selected' : ''}>Low</option>
+                                            <option value="Medium" ${data.risk_level === 'Medium' ? 'selected' : ''}>Medium</option>
+                                            <option value="High" ${data.risk_level === 'High' ? 'selected' : ''}>High</option>
+                                            <option value="Critical" ${data.risk_level === 'Critical' ? 'selected' : ''}>Critical</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="soa-${clause.id}"><small><strong>SoA Reference:</strong></small></label>
+                                        <input type="text" id="soa-${clause.id}" class="form-control form-control-sm" 
+                                               value="${data.statement_of_applicability || ''}"
+                                               placeholder="Statement of Applicability"
+                                               oninput="saveData('${clause.id}', 'statement_of_applicability', this.value)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="compliance-buttons">
+                            <button class="btn btn-success ${data.compliance_status === 'compliant' ? 'btn-selected' : ''}" 
+                                    onclick="setCompliance('${clause.id}', 'compliant')">
+                                <i class="fas fa-check"></i> Compliant
+                            </button>
+                            <button class="btn btn-warning ${data.compliance_status === 'partial' ? 'btn-selected' : ''}" 
+                                    onclick="setCompliance('${clause.id}', 'partial')">
+                                <i class="fas fa-minus"></i> Partial
+                            </button>
+                            <button class="btn btn-danger ${data.compliance_status === 'nonCompliant' ? 'btn-selected' : ''}" 
+                                    onclick="setCompliance('${clause.id}', 'nonCompliant')">
+                                <i class="fas fa-times"></i> Non-Compliant
+                            </button>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="d-flex justify-content-between">
+                                <small>Implementation Progress</small>
+                                <small id="progress-${clause.id}">
+                                    ${data.compliance_status === 'compliant' ? '100%' : data.compliance_status === 'partial' ? '50%' : '0%'}
+                                </small>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div id="progress-bar-${clause.id}" class="progress-bar 
+                                    ${data.compliance_status === 'compliant' ? 'bg-success' : data.compliance_status === 'partial' ? 'bg-warning' : data.compliance_status === 'nonCompliant' ? 'bg-danger' : ''}" 
+                                    role="progressbar" 
+                                    style="width: ${data.compliance_status === 'compliant' ? '100' : data.compliance_status === 'partial' ? '50' : '0'}%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="evidence-box">
+                            <label for="evidence-${clause.id}"><small><strong><i class="fas fa-link"></i> Evidence/Documentation:</strong></small></label>
+                            <input type="text" id="evidence-${clause.id}" class="form-control" 
+                                   value="${data.evidence_link || ''}"
+                                   placeholder="Document path, URL, or reference..." 
+                                   oninput="saveData('${clause.id}', 'evidence_link', this.value)">
+                        </div>
+
+                        <div id="${clause.id}Remarks" class="remarks-box" 
+                             style="display: ${(data.compliance_status === 'partial' || data.compliance_status === 'nonCompliant') ? 'block' : 'none'};">
+                            <label for="remarks-${clause.id}"><small><strong><i class="fas fa-comment"></i> Remarks / Improvement Actions:</strong></small></label>
+                            <textarea id="remarks-${clause.id}" class="form-control" rows="3" 
+                                      placeholder="Describe non-conformities, improvement actions, or observations..."
+                                      oninput="saveData('${clause.id}', 'remarks', this.value)">${data.remarks || ''}</textarea>
+                        </div>
+                    </div>
+                `;
+                
+                clauseListContainer.appendChild(clauseItem);
+            });
+
+            updateDashboardSummary();
+        }
+
+        // Render Annex A controls
+        function renderAnnexAControls() {
+            const controlsContainer = document.getElementById('annexAControls');
+            controlsContainer.innerHTML = '';
+            
+            annexAControls.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'control-category mb-4';
+                
+                let controlsHTML = `
+                    <h5 class="mb-3">${category.category}</h5>
+                    <div class="row">
+                `;
+                
+                category.controls.forEach(control => {
+                    const controlData = controlsData[control.id] || {};
+                    controlsHTML += `
+                        <div class="col-md-6 mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       id="control-${control.id}" 
+                                       ${controlData.implemented ? 'checked' : ''}
+                                       onchange="toggleControl('${control.id}', this.checked)">
+                                <label class="form-check-label" for="control-${control.id}">
+                                    <strong>${control.id}</strong> - ${control.name}
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                controlsHTML += '</div>';
+                categoryDiv.innerHTML = controlsHTML;
+                controlsContainer.appendChild(categoryDiv);
+            });
+        }
+
+        // Toggle control implementation status
+        function toggleControl(controlId, implemented) {
+            if (!controlsData[controlId]) {
+                controlsData[controlId] = {};
+            }
+            controlsData[controlId].implemented = implemented;
+            saveDataToStorage();
+            updateDashboardSummary();
+        }
+
+        // Save data function
+        function saveData(clauseId, field, value) {
+            if (!complianceData[clauseId]) {
+                complianceData[clauseId] = {};
+            }
+            complianceData[clauseId][field] = value;
+            saveDataToStorage();
+        }
+
+        // Set compliance status
+        function setCompliance(clauseId, status) {
+            saveData(clauseId, 'compliance_status', status);
+            
+            const clauseElement = document.getElementById(`clause-${clauseId}`);
+            const compliantBtn = clauseElement.querySelector('.btn-success');
+            const partialBtn = clauseElement.querySelector('.btn-warning');
+            const nonCompliantBtn = clauseElement.querySelector('.btn-danger');
+            const remarksDiv = document.getElementById(`${clauseId}Remarks`);
+            const progressBar = document.getElementById(`progress-bar-${clauseId}`);
+            const progressText = document.getElementById(`progress-${clauseId}`);
+
+            // Remove selection from all buttons
+            compliantBtn.classList.remove('btn-selected');
+            partialBtn.classList.remove('btn-selected');
+            nonCompliantBtn.classList.remove('btn-selected');
+
+            // Update UI
+            clauseElement.dataset.status = status;
+
+            if (status === 'compliant') {
+                compliantBtn.classList.add('btn-selected');
+                remarksDiv.style.display = 'none';
+                progressBar.style.width = '100%';
+                progressBar.className = 'progress-bar bg-success';
+                progressText.textContent = '100%';
+            } else if (status === 'partial') {
+                partialBtn.classList.add('btn-selected');
+                remarksDiv.style.display = 'block';
+                progressBar.style.width = '50%';
+                progressBar.className = 'progress-bar bg-warning';
+                progressText.textContent = '50%';
+            } else {
+                nonCompliantBtn.classList.add('btn-selected');
+                remarksDiv.style.display = 'block';
+                progressBar.style.width = '0%';
+                progressBar.className = 'progress-bar bg-danger';
+                progressText.textContent = '0%';
+            }
+
+            updateDashboardSummary();
+            checkCompliance();
+        }
+
+        // Filter functionality
+        function filterClauses(filter) {
+            const clauses = document.querySelectorAll('.clause-item');
+            clauses.forEach(clause => {
+                const status = clause.dataset.status;
+                if (filter === 'all' || 
+                    (filter === 'compliant' && status === 'compliant') ||
+                    (filter === 'nonCompliant' && status === 'nonCompliant') ||
+                    (filter === 'partial' && status === 'partial') ||
+                    (filter === 'notSet' && status === 'notSet')) {
+                    clause.style.display = 'block';
+                } else {
+                    clause.style.display = 'none';
+                }
+            });
+        }
+
+        // Update dashboard summary
+        function updateDashboardSummary() {
+            let compliant = 0, partial = 0, nonCompliant = 0, notSet = 0;
+            let controlsImplemented = 0, riskAssessments = 0, securityIncidents = 0;
+            
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const status = data.compliance_status || 'notSet';
+                if (status === 'compliant') compliant++;
+                else if (status === 'partial') partial++;
+                else if (status === 'nonCompliant') nonCompliant++;
+                else notSet++;
+
+                // Count risk assessments
+                if (clause.id.includes('risk') && data.compliance_status === 'compliant') riskAssessments++;
+            });
+
+            // Count implemented controls
+            Object.values(controlsData).forEach(control => {
+                if (control.implemented) controlsImplemented++;
+            });
+
+            const total = clauses.length;
+            const totalAssessed = compliant + partial + nonCompliant;
+            const compliancePercent = totalAssessed > 0 ? Math.round((compliant / totalAssessed) * 100) : 0;
+
+            document.getElementById('totalClauses').textContent = total;
+            document.getElementById('compliantCount').textContent = compliant;
+            document.getElementById('nonCompliantCount').textContent = nonCompliant;
+            document.getElementById('compliancePercentage').textContent = `${compliancePercent}%`;
+            document.getElementById('controlsImplemented').textContent = `${controlsImplemented}/93`;
+            document.getElementById('riskAssessments').textContent = riskAssessments;
+            document.getElementById('securityIncidents').textContent = securityIncidents;
+        }
+
+        // Check compliance and render charts
+        function checkCompliance() {
+            const complianceSummary = {
+                compliant: 0,
+                partial: 0,
+                nonCompliant: 0,
+                notSet: 0
+            };
+
+            const sectionData = {};
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const status = data.compliance_status || 'notSet';
+                
+                if (status === 'compliant') complianceSummary.compliant++;
+                else if (status === 'partial') complianceSummary.partial++;
+                else if (status === 'nonCompliant') complianceSummary.nonCompliant++;
+                else complianceSummary.notSet++;
+
+                // Section data
+                if (!sectionData[clause.section]) {
+                    sectionData[clause.section] = { compliant: 0, partial: 0, nonCompliant: 0, notSet: 0, total: 0 };
+                }
+                sectionData[clause.section][status]++;
+                sectionData[clause.section].total++;
+            });
+
+            // Update main compliance chart
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('complianceChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Compliant', 'Partially Compliant', 'Non-Compliant', 'Not Set'],
+                    datasets: [{
+                        data: [complianceSummary.compliant, complianceSummary.partial, complianceSummary.nonCompliant, complianceSummary.notSet],
+                        backgroundColor: ['#27ae60', '#f39c12', '#e74c3c', '#95a5a6'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: {
+                            display: true,
+                            text: 'Overall Compliance Status',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            });
+
+            // Update section chart
+            if (sectionChartInstance) sectionChartInstance.destroy();
+            const sectionCtx = document.getElementById('sectionChart').getContext('2d');
+            const sections = Object.keys(sectionData);
+            const sectionCompliance = sections.map(section => {
+                const data = sectionData[section];
+                const totalAssessed = data.compliant + data.partial + data.nonCompliant;
+                return totalAssessed > 0 ? Math.round((data.compliant / totalAssessed) * 100) : 0;
+            });
+
+            sectionChartInstance = new Chart(sectionCtx, {
+                type: 'bar',
+                data: {
+                    labels: sections,
+                    datasets: [{
+                        label: 'Compliance %',
+                        data: sectionCompliance,
+                        backgroundColor: '#2ecc71',
+                        borderColor: '#27ae60',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Compliance Percentage' }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Compliance by ISMS Section',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            });
+
+            updateRecommendations(complianceSummary);
+            updateActionItems();
+        }
+
+        // Update action items
+        function updateActionItems() {
+            const actionContainer = document.getElementById('actionItems');
+            actionContainer.innerHTML = '';
+            
+            const today = new Date();
+            let actionCount = 0;
+
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const nextReview = data.next_review_date;
+                const status = data.compliance_status || '';
+                
+                if (nextReview) {
+                    const dueDate = new Date(nextReview);
+                    const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysUntilDue <= 30 || status === 'nonCompliant') {
+                        actionCount++;
+                        const urgency = daysUntilDue <= 7 ? 'danger' : daysUntilDue <= 30 ? 'warning' : 'info';
+                        const actionItem = document.createElement('div');
+                        actionItem.className = `alert alert-${urgency} d-flex justify-content-between align-items-center`;
+                        actionItem.innerHTML = `
+                            <div>
+                                <strong>${clause.name}</strong>
+                                <br>
+                                <small>Due: ${nextReview} (${daysUntilDue} days)</small>
+                                ${status === 'nonCompliant' ? '<br><small class="text-danger"><strong>NON-COMPLIANT - REQUIRES ACTION</strong></small>' : ''}
+                            </div>
+                            <button class="btn btn-outline-${urgency} btn-sm" onclick="document.getElementById('clause-${clause.id}').scrollIntoView({behavior: 'smooth'})">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        `;
+                        actionContainer.appendChild(actionItem);
+                    }
+                }
+            });
+
+            if (actionCount === 0) {
+                actionContainer.innerHTML = '<div class="alert alert-success">No urgent actions required. All items are up to date.</div>';
+            }
+        }
+
+        // Update recommendations
+        function updateRecommendations(data) {
+            const recommendations = document.getElementById('recommendationList');
+            recommendations.innerHTML = '';
+
+            function addRecommendation(type, text) {
+                const li = document.createElement('li');
+                li.className = `list-group-item list-group-item-${type} d-flex align-items-center`;
+                li.innerHTML = `<i class="fas fa-chevron-right me-2"></i>${text}`;
+                recommendations.appendChild(li);
+            }
+
+            if (data.nonCompliant > 0) {
+                addRecommendation('danger', `🚨 ${data.nonCompliant} critical non-compliances require immediate corrective actions and management attention.`);
+            }
+
+            if (data.partial > 0) {
+                addRecommendation('warning', `⚠️ ${data.partial} partial compliances need gap analysis and improvement plans.`);
+            }
+
+            if (data.notSet > 0) {
+                addRecommendation('info', `ℹ️ ${data.notSet} clauses require compliance assessment and status setting.`);
+            }
+
+            const totalAssessed = data.compliant + data.partial + data.nonCompliant;
+            if (totalAssessed > 0) {
+                const complianceRate = Math.round((data.compliant / totalAssessed) * 100);
+                if (complianceRate >= 90) {
+                    addRecommendation('success', `✅ Excellent! ${complianceRate}% compliance rate. Focus on continual security improvement.`);
+                } else if (complianceRate >= 70) {
+                    addRecommendation('info', `📊 ${complianceRate}% compliance rate. Good progress, continue security management efforts.`);
+                }
+            }
+
+            // Add security-specific recommendations
+            addRecommendation('secondary', '🔒 Conduct regular information security risk assessments and updates.');
+            addRecommendation('secondary', '📋 Maintain and update Statement of Applicability for Annex A controls.');
+            addRecommendation('secondary', '🛡️ Implement security controls based on risk treatment decisions.');
+            addRecommendation('secondary', '📊 Monitor and measure security performance metrics regularly.');
+            addRecommendation('secondary', '🔍 Perform internal audits and management reviews at planned intervals.');
+        }
+
+        // Download report
+        async function downloadReport() {
+            const jsPDF = window.jspdf.jsPDF;
+            const doc = new jsPDF();
+
+            // Title Page
+            doc.setFontSize(20);
+            doc.text("ISO/IEC 27001:2022 ISMS COMPLIANCE REPORT", 105, 30, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text(`Organization: [Your Organization Name]`, 105, 45, { align: 'center' });
+            doc.text(`Report Period: ${new Date().toLocaleDateString()}`, 105, 55, { align: 'center' });
+            doc.text(`Generated by: ISO/IEC 27001:2022 Compliance Dashboard`, 105, 65, { align: 'center' });
+
+            // Summary Page
+            doc.addPage();
+            doc.setFontSize(16);
+            doc.text("EXECUTIVE SUMMARY", 105, 20, { align: 'center' });
+            
+            const complianceSummary = calculateComplianceData();
+            doc.setFontSize(10);
+            doc.text(`Overall Compliance: ${complianceSummary.percentage}%`, 20, 40);
+            doc.text(`Compliant Clauses: ${complianceSummary.compliant}`, 20, 50);
+            doc.text(`Partially Compliant: ${complianceSummary.partial}`, 20, 60);
+            doc.text(`Non-Compliant: ${complianceSummary.nonCompliant}`, 20, 70);
+            doc.text(`Not Assessed: ${complianceSummary.notSet}`, 20, 80);
+
+            // Security Metrics
+            doc.text(`Annex A Controls Implemented: ${complianceSummary.controlsImplemented}/93`, 20, 100);
+            doc.text(`Risk Assessments Completed: ${complianceSummary.riskAssessments}`, 20, 110);
+            doc.text(`Security Incidents: ${complianceSummary.securityIncidents}`, 20, 120);
+
+            // Detailed compliance table
+            doc.addPage();
+            doc.setFontSize(14);
+            doc.text("DETAILED COMPLIANCE ASSESSMENT", 105, 15, { align: 'center' });
+
+            let rows = [];
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                rows.push([
+                    clause.name,
+                    clause.section,
+                    data.responsibility || 'Not assigned',
+                    data.review_frequency || 'Not set',
+                    data.compliance_status || 'Not set',
+                    data.implementation_level || 'Not set',
+                    data.last_review_date || 'Not reviewed',
+                    data.next_review_date || 'Not scheduled',
+                    data.evidence_link || 'Not provided'
+                ]);
+            });
+
+            doc.autoTable({
+                head: [["Clause", "Section", "Responsibility", "Frequency", "Status", "Implementation", "Last Review", "Next Review", "Evidence"]],
+                body: rows,
+                startY: 25,
+                theme: 'grid',
+                styles: { 
+                    fontSize: 6,
+                    cellPadding: 2,
+                    valign: 'top'
+                },
+                headStyles: {
+                    fillColor: [46, 204, 113],
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                columnStyles: {
+                    0: { cellWidth: 25 },
+                    1: { cellWidth: 18 },
+                    2: { cellWidth: 18 },
+                    3: { cellWidth: 15 },
+                    4: { cellWidth: 12 },
+                    5: { cellWidth: 15 },
+                    6: { cellWidth: 18 },
+                    7: { cellWidth: 18 },
+                    8: { cellWidth: 25, fontStyle: 'italic' }
+                }
+            });
+
+            // Annex A Controls Summary
+            doc.addPage();
+            doc.setFontSize(14);
+            doc.text("ANNEX A CONTROLS IMPLEMENTATION STATUS", 105, 15, { align: 'center' });
+
+            let controlRows = [];
+            annexAControls.forEach(category => {
+                category.controls.forEach(control => {
+                    const controlData = controlsData[control.id] || {};
+                    controlRows.push([
+                        control.id,
+                        control.name,
+                        category.category,
+                        controlData.implemented ? 'Implemented' : 'Not Implemented',
+                        controlData.implementation_date || 'N/A',
+                        controlData.responsible_party || 'N/A'
+                    ]);
+                });
+            });
+
+            doc.autoTable({
+                head: [["Control ID", "Control Name", "Category", "Status", "Implementation Date", "Responsible Party"]],
+                body: controlRows,
+                startY: 25,
+                theme: 'grid',
+                styles: { 
+                    fontSize: 6,
+                    cellPadding: 2
+                },
+                headStyles: {
+                    fillColor: [46, 204, 113],
+                    textColor: 255,
+                    fontStyle: 'bold'
+                }
+            });
+
+            doc.save(`ISO27001_ISMS_Compliance_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        function calculateComplianceData() {
+            let compliant = 0, partial = 0, nonCompliant = 0, notSet = 0;
+            let controlsImplemented = 0, riskAssessments = 0, securityIncidents = 0;
+            
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const status = data.compliance_status || 'notSet';
+                if (status === 'compliant') compliant++;
+                else if (status === 'partial') partial++;
+                else if (status === 'nonCompliant') nonCompliant++;
+                else notSet++;
+
+                if (clause.id.includes('risk') && data.compliance_status === 'compliant') riskAssessments++;
+            });
+
+            Object.values(controlsData).forEach(control => {
+                if (control.implemented) controlsImplemented++;
+            });
+            
+            const totalAssessed = compliant + partial + nonCompliant;
+            const percentage = totalAssessed > 0 ? Math.round((compliant / totalAssessed) * 100) : 0;
+            
+            return { compliant, partial, nonCompliant, notSet, percentage, controlsImplemented, riskAssessments, securityIncidents };
+        }
+
+        // Export data
+        function exportData() {
+            const exportData = {
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    standard: "ISO/IEC 27001:2022",
+                    totalClauses: clauses.length
+                },
+                complianceData: calculateComplianceData(),
+                clauses: clauses.map(clause => ({
+                    id: clause.id,
+                    name: clause.name,
+                    section: clause.section,
+                    priority: clause.priority,
+                    description: clause.description,
+                    ...complianceData[clause.id]
+                })),
+                annexAControls: annexAControls.flatMap(category => 
+                    category.controls.map(control => ({
+                        id: control.id,
+                        name: control.name,
+                        category: category.category,
+                        ...controlsData[control.id]
+                    }))
+                )
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `iso27001_compliance_data_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+                localStorage.removeItem('iso27001ComplianceData');
+                localStorage.removeItem('iso27001ControlsData');
+                complianceData = {};
+                controlsData = {};
+                initDashboard();
+                alert('All data has been cleared.');
+            }
+        }
+
+        // Initialize the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
