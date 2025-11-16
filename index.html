@@ -119,8 +119,12 @@
 
     <!-- Search -->
     <div class="search-bar mb-5">
-      <input type="text" id="searchInput" class="form-control form-control-lg"
-        placeholder="🔍 Search for a standard (e.g., Quality, Risk, Safety)" />
+      <input
+        type="text"
+        id="searchInput"
+        class="form-control form-control-lg"
+        placeholder="🔍 Search for a standard (e.g., Quality, Risk, Safety)"
+      />
     </div>
 
     <!-- IMS Health -->
@@ -148,49 +152,64 @@
     <!-- ISO Grid -->
     <div id="standardsGrid" class="row row-cols-1 row-cols-md-2 g-4">
       <div class="col standard-card" data-name="9001 quality management">
-        <a href="./ISO-9001-2015/" class="btn btn-primary w-100 btn-standard">
+        <!-- Folder: 9001 2015 -->
+        <a href="./9001 2015/" class="btn btn-primary w-100 btn-standard">
           <i class="fas fa-certificate"></i> ISO 9001:2015 – Quality Management
           <div class="small mt-2" id="iso9001Progress">Compliance: --%</div>
         </a>
       </div>
+
       <div class="col standard-card" data-name="14001 environmental management">
-        <a href="./ISO-14001-2015/" class="btn btn-success w-100 btn-standard">
+        <!-- Folder: 14001 2015 -->
+        <a href="./14001 2015/" class="btn btn-success w-100 btn-standard">
           <i class="fas fa-leaf"></i> ISO 14001:2015 – Environmental Management
           <div class="small mt-2" id="iso14001Progress">Compliance: --%</div>
         </a>
       </div>
+
       <div class="col standard-card" data-name="45001 occupational health safety ohs">
-        <a href="./ISO-45001-2018/" class="btn btn-danger w-100 btn-standard">
+        <!-- Folder: 45001 2018 -->
+        <a href="./45001 2018/" class="btn btn-danger w-100 btn-standard">
           <i class="fas fa-hard-hat"></i> ISO 45001:2018 – Occupational Health & Safety
           <div class="small mt-2" id="iso45001Progress">Compliance: --%</div>
         </a>
       </div>
+
       <div class="col standard-card" data-name="31000 risk management">
-        <a href="./ISO-31000-2018/" class="btn btn-secondary w-100 btn-standard">
+        <!-- Folder: 31000 2018 -->
+        <a href="./31000 2018/" class="btn btn-secondary w-100 btn-standard">
           <i class="fas fa-exclamation-triangle"></i> ISO 31000:2018 – Risk Management
           <div class="small mt-2" id="iso31000Progress">Compliance: --%</div>
         </a>
       </div>
+
       <div class="col standard-card" data-name="22301 business continuity">
-        <a href="./ISO-22301-2019/" class="btn btn-info w-100 btn-standard">
+        <!-- Folder: 22301 2019 -->
+        <a href="./22301 2019/" class="btn btn-info w-100 btn-standard">
           <i class="fas fa-shield-alt"></i> ISO 22301:2019 – Business Continuity
           <div class="small mt-2" id="iso22301Progress">Compliance: --%</div>
         </a>
       </div>
+
       <div class="col standard-card" data-name="27001 information security">
-        <a href="./ISO-27001-2022/" class="btn btn-dark w-100 btn-standard">
+        <!-- Folder: 27000 2022 (as you specified) -->
+        <a href="./27000 2022/" class="btn btn-dark w-100 btn-standard">
           <i class="fas fa-lock"></i> ISO 27001:2022 – Information Security
           <div class="small mt-2" id="iso27001Progress">Compliance: --%</div>
         </a>
       </div>
+
       <div class="col standard-card" data-name="50001 energy management">
-        <a href="./ISO-50001-2018/" class="btn btn-warning w-100 btn-standard">
+        <!-- Folder: 50001 2018 -->
+        <a href="./50001 2018/" class="btn btn-warning w-100 btn-standard">
           <i class="fas fa-bolt"></i> ISO 50001:2018 – Energy Management
           <div class="small mt-2" id="iso50001Progress">Compliance: --%</div>
         </a>
       </div>
+
       <div class="col standard-card" data-name="26000 social responsibility csr sustainability">
-        <a href="./ISO-26000-2010/" class="btn btn-outline-primary w-100 btn-standard">
+        <!-- Folder: 26000 2010 -->
+        <a href="./26000 2010/" class="btn btn-outline-primary w-100 btn-standard">
           <i class="fas fa-hand-holding-heart"></i> ISO 26000:2010 – Social Responsibility
           <div class="small mt-2" id="iso26000Progress">Compliance: --%</div>
         </a>
@@ -228,31 +247,45 @@
 
     function calcCompliance(data) {
       const items = Object.values(data || {});
-      if (items.length === 0) return 0;
+      if (items.length === 0) return null; // no data yet for this standard
       const compliant = items.filter((i) => i.compliance_status === "compliant").length;
       const partial = items.filter((i) => i.compliance_status === "partial").length;
       return Math.round(((compliant + partial * 0.5) / items.length) * 100);
     }
 
     const complianceScores = {};
+
     for (const [standard, key] of Object.entries(isoKeys)) {
       try {
-        const data = JSON.parse(localStorage.getItem(key)) || {};
+        const raw = localStorage.getItem(key);
+        const data = raw ? JSON.parse(raw) : {};
         const score = calcCompliance(data);
         complianceScores[standard] = score;
+
         const id = key.replace("ComplianceData", "Progress");
         const el = document.getElementById(id);
-        if (el) el.textContent = `Compliance: ${score}%`;
+        if (el) {
+          if (score === null || Number.isNaN(score)) {
+            el.textContent = `Compliance: --%`;
+          } else {
+            el.textContent = `Compliance: ${score}%`;
+          }
+        }
       } catch {
-        complianceScores[standard] = 0;
+        complianceScores[standard] = null;
       }
     }
 
     // === Overall IMS Health Calculation ===
-    const avgScore = Math.round(
-      Object.values(complianceScores).reduce((a, b) => a + b, 0) /
-        Object.keys(complianceScores).length
+    const nonNullScores = Object.values(complianceScores).filter(
+      (v) => v !== null && !Number.isNaN(v)
     );
+
+    const avgScore =
+      nonNullScores.length === 0
+        ? 0
+        : Math.round(nonNullScores.reduce((a, b) => a + b, 0) / nonNullScores.length);
+
     const healthText = document.getElementById("healthMessage");
     const scoreLabel = document.getElementById("overallIMSScore");
     let color = "#dc3545";
@@ -272,41 +305,74 @@
 
     scoreLabel.innerHTML = `<span style="color:${color}">${avgScore}%</span>`;
 
-    // === Chart Colors ===
+    // === Chart Setup ===
     let chartTextColor = getComputedStyle(document.body).getPropertyValue("--text-color");
 
     const pieCtx = document.getElementById("overallPieChart").getContext("2d");
-    let pieChart = new Chart(pieCtx, {
-      type: "doughnut",
-      data: {
-        labels: ["Compliant", "Pending"],
-        datasets: [
-          { data: [avgScore, 100 - avgScore], backgroundColor: [color, "#e9ecef"] },
-        ],
-      },
-      options: { cutout: "70%", plugins: { legend: { display: false } } },
-    });
-
     const barCtx = document.getElementById("complianceChart").getContext("2d");
-    let barChart = new Chart(barCtx, {
-      type: "bar",
-      data: {
-        labels: Object.keys(complianceScores),
-        datasets: [
-          {
-            label: "Compliance %",
-            data: Object.values(complianceScores),
-            backgroundColor: Object.values(complianceScores).map((v) =>
-              v >= 80 ? "#28a745" : v >= 50 ? "#ffc107" : "#dc3545"
-            ),
+
+    function buildCharts() {
+      const compliantValue = avgScore;
+      const pendingValue = Math.max(0, 100 - avgScore);
+
+      // Destroy existing charts if they exist
+      if (window.pieChart) window.pieChart.destroy();
+      if (window.barChart) window.barChart.destroy();
+
+      window.pieChart = new Chart(pieCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["Compliant", "Pending"],
+          datasets: [
+            {
+              data: [compliantValue, pendingValue],
+              backgroundColor: [color, "#e9ecef"],
+            },
+          ],
+        },
+        options: {
+          cutout: "70%",
+          plugins: { legend: { display: false } },
+        },
+      });
+
+      const labels = Object.keys(complianceScores);
+      const barData = labels.map((std) => complianceScores[std] ?? 0);
+
+      window.barChart = new Chart(barCtx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Compliance %",
+              data: barData,
+              backgroundColor: barData.map((v) => {
+                if (v === 0 && complianceScores[labels[barData.indexOf(v)]] === null) {
+                  return "#6c757d"; // grey for "no data"
+                }
+                return v >= 80 ? "#28a745" : v >= 50 ? "#ffc107" : "#dc3545";
+              }),
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { color: chartTextColor },
+            },
+            x: {
+              ticks: { color: chartTextColor },
+            },
           },
-        ],
-      },
-      options: {
-        scales: { y: { beginAtZero: true, max: 100, ticks: { color: chartTextColor } } },
-        plugins: { legend: { display: false } },
-      },
-    });
+          plugins: { legend: { display: false } },
+        },
+      });
+    }
+
+    buildCharts();
 
     // === Theme Toggle ===
     const toggle = document.getElementById("themeToggle");
@@ -317,37 +383,9 @@
         ? '<i class="fas fa-sun"></i>'
         : '<i class="fas fa-moon"></i>';
       chartTextColor = dark ? "#f8f9fa" : "#212529";
-      [pieChart, barChart].forEach((chart) => chart.destroy());
-      // Rebuild with updated text color
-      pieChart = new Chart(pieCtx, {
-        type: "doughnut",
-        data: {
-          labels: ["Compliant", "Pending"],
-          datasets: [
-            { data: [avgScore, 100 - avgScore], backgroundColor: [color, "#444"] },
-          ],
-        },
-        options: { cutout: "70%", plugins: { legend: { display: false } } },
-      });
-      barChart = new Chart(barCtx, {
-        type: "bar",
-        data: {
-          labels: Object.keys(complianceScores),
-          datasets: [
-            {
-              label: "Compliance %",
-              data: Object.values(complianceScores),
-              backgroundColor: Object.values(complianceScores).map((v) =>
-                v >= 80 ? "#28a745" : v >= 50 ? "#ffc107" : "#dc3545"
-              ),
-            },
-          ],
-        },
-        options: {
-          scales: { y: { beginAtZero: true, max: 100, ticks: { color: chartTextColor } } },
-          plugins: { legend: { display: false } },
-        },
-      });
+
+      // Rebuild charts with new text colour
+      buildCharts();
     });
   </script>
 </body>
