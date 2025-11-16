@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Integrated Management System (IMS) Dashboard</title>
-  <link rel="stylesheet" href="ims.css">
   <style>
-    /* ---------- BASE LAYOUT ---------- */
     body {
       font-family: "Inter", "Segoe UI", Roboto, sans-serif;
       background: #f3f5f7;
@@ -37,7 +35,6 @@
       margin-top: 10px;
     }
 
-    /* ---------- FILTER SECTION ---------- */
     .filter-section {
       display: flex;
       justify-content: center;
@@ -70,7 +67,6 @@
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
 
-    /* ---------- RESULTS AREA ---------- */
     #results {
       max-width: 1000px;
       margin: 30px auto;
@@ -110,10 +106,6 @@
       margin-top: 10px;
     }
 
-    details summary:hover {
-      text-decoration: underline;
-    }
-
     footer {
       text-align: center;
       background: #f9fafb;
@@ -124,16 +116,25 @@
       margin-top: 40px;
     }
 
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 1.5rem;
-      }
-      select, input {
-        width: 90%;
-      }
-      .filter-section {
-        border-radius: 0;
-      }
+    /* ✅ Success Toast Message */
+    #toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 9999;
+    }
+
+    #toast.show {
+      opacity: 1;
     }
   </style>
 </head>
@@ -163,13 +164,102 @@
     <p style="text-align:center; color:#94a3b8;">Loading knowledge base...</p>
   </main>
 
+  <div id="toast">Data loaded successfully ✅</div>
+
   <footer>
     © <span id="year"></span> Integrated Management System Knowledge Base | Created by Gokul
   </footer>
 
-  <script src="ims.js"></script>
   <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    function showToast() {
+      const toast = document.getElementById("toast");
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    async function loadIMS() {
+      const container = document.getElementById("results");
+      try {
+        const response = await fetch("Merged_ISO_Clauses.json");
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} - File not found or inaccessible`);
+        }
+
+        const data = await response.json();
+
+        if (!data.Merged_Standards || !Array.isArray(data.Merged_Standards)) {
+          throw new Error("JSON structure invalid — 'Merged_Standards' array not found");
+        }
+
+        window.IMSData = data.Merged_Standards;
+        renderResults(window.IMSData);
+        showToast(); // ✅ Show success message
+      } catch (error) {
+        console.error("Error loading JSON:", error);
+        container.innerHTML = `
+          <div style="text-align:center; color:#dc2626; font-weight:600; padding:20px;">
+            ⚠️ Unable to load data. Please verify that <b>Merged_ISO_Clauses.json</b> 
+            is in the same folder as this file.<br><br>
+            <small>Error: ${error.message}</small>
+          </div>
+        `;
+      }
+    }
+
+    function renderResults(clauses) {
+      const container = document.getElementById("results");
+      container.innerHTML = "";
+
+      if (!clauses || clauses.length === 0) {
+        container.innerHTML = "<p style='text-align:center; color:#999;'>No results found.</p>";
+        return;
+      }
+
+      clauses.forEach((c) => {
+        const div = document.createElement("div");
+        div.className = "clause-card";
+        div.innerHTML = `
+          <h3>${c.Standard} — Clause ${c.Clause}</h3>
+          <p><strong>${c.Title}</strong></p>
+          <p>${c.Purpose}</p>
+          <details>
+            <summary>More details</summary>
+            <p><b>Evidence:</b> ${c.Evidence}</p>
+            <p><b>Integration:</b> ${c.Integration}</p>
+            <p><b>Example:</b> ${c.Example}</p>
+          </details>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function setupFilters() {
+      document.getElementById("standardFilter").addEventListener("change", filterData);
+      document.getElementById("searchBox").addEventListener("input", filterData);
+    }
+
+    function filterData() {
+      const filter = document.getElementById("standardFilter").value.toLowerCase();
+      const query = document.getElementById("searchBox").value.toLowerCase();
+
+      const filtered = window.IMSData.filter(
+        (c) =>
+          (!filter || c.Standard.toLowerCase().includes(filter)) &&
+          (c.Clause.toLowerCase().includes(query) ||
+            c.Title.toLowerCase().includes(query) ||
+            c.Purpose.toLowerCase().includes(query))
+      );
+
+      renderResults(filtered);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadIMS();
+      setupFilters();
+    });
   </script>
 </body>
 </html>
