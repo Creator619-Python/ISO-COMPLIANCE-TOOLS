@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO 31000:2018 Risk Management Compliance Dashboard</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --risk-color: #8e44ad;
+        }
+        
+        .btn-selected {
+            opacity: 0.9;
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .clause-item {
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .clause-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .clause-header {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .clause-metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: var(--light);
+            border-radius: 8px;
+        }
+        .compliance-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .evidence-box {
+            margin: 15px 0;
+        }
+        .remarks-box {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 8px;
+            border-left: 4px solid var(--warning);
+        }
+        .section-divider {
+            border-top: 3px solid var(--risk-color);
+            margin: 25px 0;
+            padding-top: 20px;
+            background: linear-gradient(135deg, #8e44ad 0%, #c39bd3 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .progress-container {
+            margin: 10px 0;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+        .dashboard-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .filter-buttons {
+            margin-bottom: 20px;
+        }
+        .clause-priority {
+            font-size: 0.9rem;
+            padding: 3px 8px;
+            border-radius: 8px;
+            margin-left: 10px;
+        }
+        .priority-high { background: var(--danger); color: white; }
+        .priority-medium { background: var(--warning); color: black; }
+        .priority-low { background: var(--success); color: white; }
+        
+        @media (max-width: 768px) {
+            .clause-metadata {
+                grid-template-columns: 1fr;
+            }
+            .compliance-buttons {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="text-center mb-4">
+            <h1 class="display-4" style="color: var(--risk-color);">
+                <i class="fas fa-exclamation-triangle"></i> ISO 31000:2018 Risk Management Compliance Dashboard
+            </h1>
+            <p class="lead">Risk Management System Compliance Tracking Tool</p>
+        </div>
+
+        <!-- Dashboard Summary -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="totalClauses">0</h3>
+                    <p class="text-muted">Total Requirements</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="compliantCount" style="color: var(--success);">0</h3>
+                    <p class="text-muted">Implemented</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="nonCompliantCount" style="color: var(--danger);">0</h3>
+                    <p class="text-muted">Not Implemented</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="compliancePercentage">0%</h3>
+                    <p class="text-muted">Overall Implementation</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Management Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h4 id="riskAssessmentCount">0</h4>
+                    <p class="text-muted">Risk Assessments</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h4 id="riskTreatmentCount">0</h4>
+                    <p class="text-muted">Risk Treatments</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h4 id="riskReviewCount">0</h4>
+                    <p class="text-muted">Risk Reviews</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h4 id="stakeholderCount">0</h4>
+                    <p class="text-muted">Stakeholders Engaged</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-buttons">
+            <button class="btn btn-outline-primary btn-sm" onclick="filterClauses('all')">
+                <i class="fas fa-list"></i> All Requirements
+            </button>
+            <button class="btn btn-outline-success btn-sm" onclick="filterClauses('compliant')">
+                <i class="fas fa-check-circle"></i> Implemented
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="filterClauses('nonCompliant')">
+                <i class="fas fa-exclamation-circle"></i> Not Implemented
+            </button>
+            <button class="btn btn-outline-warning btn-sm" onclick="filterClauses('partial')">
+                <i class="fas fa-minus-circle"></i> Partial
+            </button>
+            <button class="btn btn-outline-info btn-sm" onclick="filterClauses('notSet')">
+                <i class="fas fa-question-circle"></i> Not Set
+            </button>
+        </div>
+
+        <!-- Clause List Container -->
+        <div id="clauseList" class="mb-4"></div>
+
+        <!-- Chart and Actions Section -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <canvas id="complianceChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <canvas id="sectionChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <button class="btn btn-primary btn-lg mb-3 mr-3" onclick="checkCompliance()">
+                    <i class="fas fa-sync-alt"></i> Update Implementation Status
+                </button>
+                <button class="btn btn-success btn-lg mb-3 mr-3" onclick="downloadReport()">
+                    <i class="fas fa-download"></i> Download Risk Management Report
+                </button>
+                <button class="btn btn-info btn-lg mb-3" onclick="exportData()">
+                    <i class="fas fa-file-export"></i> Export Data
+                </button>
+                <button class="btn btn-warning btn-lg mb-3" onclick="clearAllData()">
+                    <i class="fas fa-trash"></i> Clear All Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Risk Treatment Action Items Section -->
+        <div class="dashboard-card mt-4">
+            <h4><i class="fas fa-tasks"></i> Risk Treatment Actions & Due Dates</h4>
+            <div id="actionItems" class="mt-3"></div>
+        </div>
+
+        <!-- Risk Management Recommendations Section -->
+        <div class="dashboard-card mt-4">
+            <h4><i class="fas fa-lightbulb"></i> Risk Management Improvement Recommendations</h4>
+            <ul id="recommendationList" class="list-group mt-3"></ul>
+        </div>
+    </div>
+
+    <script>
+        // ISO 31000:2018 Requirements Data
+        const clauses = [
+            // Principles (Clause 4)
+            { id: 'principlesIntegrated', name: '4.a Integrated', section: 'Principles', priority: 'high', description: 'Risk management integrated into all organizational activities' },
+            { id: 'principlesStructured', name: '4.b Structured & Comprehensive', section: 'Principles', priority: 'high', description: 'Structured approach for consistent results' },
+            { id: 'principlesCustomized', name: '4.c Customized', section: 'Principles', priority: 'medium', description: 'Framework customized to organizational context' },
+            { id: 'principlesInclusive', name: '4.d Inclusive', section: 'Principles', priority: 'medium', description: 'Appropriate stakeholder involvement' },
+            { id: 'principlesDynamic', name: '4.e Dynamic', section: 'Principles', priority: 'medium', description: 'Anticipates and responds to change' },
+            { id: 'principlesInformation', name: '4.f Best Available Information', section: 'Principles', priority: 'high', description: 'Uses historical, current and future information' },
+            { id: 'principlesHuman', name: '4.g Human & Cultural Factors', section: 'Principles', priority: 'medium', description: 'Considers human behaviour and culture' },
+            { id: 'principlesImprovement', name: '4.h Continual Improvement', section: 'Principles', priority: 'medium', description: 'Continually improved through learning' },
+
+            // Framework - Leadership and Commitment (5.2)
+            { id: 'leadershipIntegration', name: '5.2 Leadership Integration', section: 'Framework', priority: 'high', description: 'Top management integrates risk management' },
+            { id: 'riskPolicy', name: '5.2 Risk Management Policy', section: 'Framework', priority: 'high', description: 'Establish and communicate risk policy' },
+            { id: 'resourceAllocation', name: '5.2 Resource Allocation', section: 'Framework', priority: 'high', description: 'Allocate necessary resources' },
+            { id: 'authorityAssignment', name: '5.2 Authority Assignment', section: 'Framework', priority: 'medium', description: 'Assign authority and accountability' },
+
+            // Framework - Integration (5.3)
+            { id: 'integrationGovernance', name: '5.3 Governance Integration', section: 'Framework', priority: 'high', description: 'Integrate into governance structures' },
+            { id: 'integrationCulture', name: '5.3 Cultural Integration', section: 'Framework', priority: 'medium', description: 'Embed in organizational culture' },
+
+            // Framework - Design (5.4)
+            { id: 'contextUnderstanding', name: '5.4.1 Context Understanding', section: 'Framework', priority: 'high', description: 'Understand external and internal context' },
+            { id: 'commitmentArticulation', name: '5.4.2 Commitment Articulation', section: 'Framework', priority: 'medium', description: 'Articulate risk management commitment' },
+            { id: 'rolesAssignment', name: '5.4.3 Roles Assignment', section: 'Framework', priority: 'medium', description: 'Assign roles and responsibilities' },
+            { id: 'resourceManagement', name: '5.4.4 Resource Management', section: 'Framework', priority: 'medium', description: 'Allocate appropriate resources' },
+            { id: 'communicationEstablishment', name: '5.4.5 Communication Establishment', section: 'Framework', priority: 'medium', description: 'Establish communication and consultation' },
+
+            // Framework - Implementation (5.5)
+            { id: 'implementationPlanning', name: '5.5 Implementation Planning', section: 'Framework', priority: 'medium', description: 'Develop implementation plan' },
+            { id: 'decisionIntegration', name: '5.5 Decision Integration', section: 'Framework', priority: 'high', description: 'Integrate into decision-making' },
+
+            // Framework - Evaluation (5.6)
+            { id: 'frameworkEvaluation', name: '5.6 Framework Evaluation', section: 'Framework', priority: 'medium', description: 'Evaluate framework effectiveness' },
+
+            // Framework - Improvement (5.7)
+            { id: 'frameworkAdaptation', name: '5.7.1 Framework Adaptation', section: 'Framework', priority: 'medium', description: 'Adapt framework to changes' },
+            { id: 'continualImprovement', name: '5.7.2 Continual Improvement', section: 'Framework', priority: 'medium', description: 'Continually improve framework' },
+
+            // Process - Communication and Consultation (6.2)
+            { id: 'processCommunication', name: '6.2 Communication & Consultation', section: 'Process', priority: 'medium', description: 'Establish communication throughout process' },
+
+            // Process - Scope, Context and Criteria (6.3)
+            { id: 'scopeDefinition', name: '6.3.2 Scope Definition', section: 'Process', priority: 'high', description: 'Define risk management scope' },
+            { id: 'contextEstablishment', name: '6.3.3 Context Establishment', section: 'Process', priority: 'high', description: 'Establish external and internal context' },
+            { id: 'riskCriteria', name: '6.3.4 Risk Criteria', section: 'Process', priority: 'high', description: 'Define risk evaluation criteria' },
+
+            // Process - Risk Assessment (6.4)
+            { id: 'riskIdentification', name: '6.4.2 Risk Identification', section: 'Process', priority: 'high', description: 'Identify risks that affect objectives' },
+            { id: 'riskAnalysis', name: '6.4.3 Risk Analysis', section: 'Process', priority: 'high', description: 'Comprehend risk nature and characteristics' },
+            { id: 'riskEvaluation', name: '6.4.4 Risk Evaluation', section: 'Process', priority: 'high', description: 'Support decisions through risk comparison' },
+
+            // Process - Risk Treatment (6.5)
+            { id: 'treatmentSelection', name: '6.5.2 Treatment Selection', section: 'Process', priority: 'high', description: 'Select appropriate treatment options' },
+            { id: 'treatmentImplementation', name: '6.5.3 Treatment Implementation', section: 'Process', priority: 'high', description: 'Implement risk treatment plans' },
+
+            // Process - Monitoring and Review (6.6)
+            { id: 'monitoringReview', name: '6.6 Monitoring & Review', section: 'Process', priority: 'medium', description: 'Monitor and review risk management' },
+
+            // Process - Recording and Reporting (6.7)
+            { id: 'recordingReporting', name: '6.7 Recording & Reporting', section: 'Process', priority: 'medium', description: 'Document and report risk management' }
+        ];
+
+        // Global variables
+        let chartInstance;
+        let sectionChartInstance;
+        let complianceData = {};
+
+        // Initialize the dashboard
+        function initDashboard() {
+            loadDataFromStorage();
+            renderClauses();
+            checkCompliance();
+        }
+
+        // Load data from localStorage
+        function loadDataFromStorage() {
+            const savedData = localStorage.getItem('iso31000ComplianceData');
+            if (savedData) {
+                complianceData = JSON.parse(savedData);
+            } else {
+                // Initialize empty data
+                clauses.forEach(clause => {
+                    complianceData[clause.id] = {
+                        compliance_status: '',
+                        remarks: '',
+                        evidence_link: '',
+                        review_frequency: '',
+                        last_review_date: '',
+                        next_review_date: '',
+                        responsibility: '',
+                        implementation_level: '',
+                        risk_assessment_status: '',
+                        risk_treatment_status: '',
+                        stakeholder_status: ''
+                    };
+                });
+            }
+        }
+
+        // Save data to localStorage
+        function saveDataToStorage() {
+            localStorage.setItem('iso31000ComplianceData', JSON.stringify(complianceData));
+        }
+
+        // Render all clauses
+        function renderClauses() {
+            const clauseListContainer = document.getElementById('clauseList');
+            clauseListContainer.innerHTML = '';
+            let currentSection = '';
+            
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                
+                // Add section divider if section changed
+                if (clause.section !== currentSection) {
+                    currentSection = clause.section;
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'section-divider';
+                    sectionDiv.innerHTML = `
+                        <h4><i class="fas fa-folder-open"></i> ${currentSection}</h4>
+                        <p class="mb-0">ISO 31000:2018 ${currentSection} Requirements</p>
+                    `;
+                    clauseListContainer.appendChild(sectionDiv);
+                }
+
+                // Create clause item
+                const clauseItem = document.createElement('div');
+                clauseItem.className = 'clause-item';
+                clauseItem.id = `clause-${clause.id}`;
+                clauseItem.dataset.section = clause.section;
+                clauseItem.dataset.status = data.compliance_status || 'notSet';
+                
+                const priorityClass = `priority-${clause.priority}`;
+                
+                clauseItem.innerHTML = `
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="clause-header card-title">
+                                ${clause.name}
+                                <span class="clause-priority ${priorityClass}">${clause.priority.toUpperCase()}</span>
+                            </h5>
+                            <small class="text-muted">${clause.description}</small>
+                        </div>
+                        
+                        <div class="clause-metadata">
+                            <div class="form-group">
+                                <label for="frequency-${clause.id}"><small><strong><i class="fas fa-calendar-alt"></i> Review Frequency:</strong></small></label>
+                                <select id="frequency-${clause.id}" class="form-control form-control-sm" onchange="saveData('${clause.id}', 'review_frequency', this.value)">
+                                    <option value="">Select Frequency</option>
+                                    <option value="Monthly" ${data.review_frequency === 'Monthly' ? 'selected' : ''}>Monthly</option>
+                                    <option value="Quarterly" ${data.review_frequency === 'Quarterly' ? 'selected' : ''}>Quarterly</option>
+                                    <option value="Half-Yearly" ${data.review_frequency === 'Half-Yearly' ? 'selected' : ''}>Half-Yearly</option>
+                                    <option value="Yearly" ${data.review_frequency === 'Yearly' ? 'selected' : ''}>Yearly</option>
+                                    <option value="Continuous" ${data.review_frequency === 'Continuous' ? 'selected' : ''}>Continuous</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="implementation-${clause.id}"><small><strong><i class="fas fa-cog"></i> Implementation Level:</strong></small></label>
+                                <select id="implementation-${clause.id}" class="form-control form-control-sm" onchange="saveData('${clause.id}', 'implementation_level', this.value)">
+                                    <option value="">Select Level</option>
+                                    <option value="Fully Implemented" ${data.implementation_level === 'Fully Implemented' ? 'selected' : ''}>Fully Implemented</option>
+                                    <option value="Partially Implemented" ${data.implementation_level === 'Partially Implemented' ? 'selected' : ''}>Partially Implemented</option>
+                                    <option value="Planned" ${data.implementation_level === 'Planned' ? 'selected' : ''}>Planned</option>
+                                    <option value="Not Started" ${data.implementation_level === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastReview-${clause.id}"><small><strong><i class="fas fa-calendar-check"></i> Last Review:</strong></small></label>
+                                <input type="date" id="lastReview-${clause.id}" class="form-control form-control-sm" 
+                                       value="${data.last_review_date || ''}"
+                                       onchange="saveData('${clause.id}', 'last_review_date', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label for="nextReview-${clause.id}"><small><strong><i class="fas fa-calendar-plus"></i> Next Review:</strong></small></label>
+                                <input type="date" id="nextReview-${clause.id}" class="form-control form-control-sm" 
+                                       value="${data.next_review_date || ''}"
+                                       onchange="saveData('${clause.id}', 'next_review_date', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label for="responsibility-${clause.id}"><small><strong><i class="fas fa-user"></i> Responsibility:</strong></small></label>
+                                <input type="text" id="responsibility-${clause.id}" class="form-control form-control-sm" 
+                                       value="${data.responsibility || ''}"
+                                       placeholder="e.g., Risk Manager" 
+                                       oninput="saveData('${clause.id}', 'responsibility', this.value)">
+                            </div>
+                        </div>
+
+                        ${clause.id === 'riskIdentification' || clause.id === 'riskTreatment' || clause.id === 'processCommunication' ? `
+                        <div class="risk-performance-box mt-3 p-3 bg-light rounded">
+                            <h6><i class="fas fa-chart-line"></i> Risk Management Status</h6>
+                            <div class="row">
+                                ${clause.id === 'riskIdentification' ? `
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="riskAssessment-${clause.id}"><small><strong>Risk Assessment Status:</strong></small></label>
+                                        <select id="riskAssessment-${clause.id}" class="form-control form-control-sm" onchange="saveData('${clause.id}', 'risk_assessment_status', this.value)">
+                                            <option value="">Select Status</option>
+                                            <option value="Completed" ${data.risk_assessment_status === 'Completed' ? 'selected' : ''}>Completed</option>
+                                            <option value="In Progress" ${data.risk_assessment_status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                            <option value="Not Started" ${data.risk_assessment_status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                ` : ''}
+                                ${clause.id === 'riskTreatment' ? `
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="riskTreatment-${clause.id}"><small><strong>Risk Treatment Status:</strong></small></label>
+                                        <select id="riskTreatment-${clause.id}" class="form-control form-control-sm" onchange="saveData('${clause.id}', 'risk_treatment_status', this.value)">
+                                            <option value="">Select Status</option>
+                                            <option value="Implemented" ${data.risk_treatment_status === 'Implemented' ? 'selected' : ''}>Implemented</option>
+                                            <option value="In Progress" ${data.risk_treatment_status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                            <option value="Planned" ${data.risk_treatment_status === 'Planned' ? 'selected' : ''}>Planned</option>
+                                            <option value="Not Started" ${data.risk_treatment_status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                ` : ''}
+                                ${clause.id === 'processCommunication' ? `
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="stakeholder-${clause.id}"><small><strong>Stakeholder Engagement:</strong></small></label>
+                                        <select id="stakeholder-${clause.id}" class="form-control form-control-sm" onchange="saveData('${clause.id}', 'stakeholder_status', this.value)">
+                                            <option value="">Select Status</option>
+                                            <option value="Engaged" ${data.stakeholder_status === 'Engaged' ? 'selected' : ''}>Engaged</option>
+                                            <option value="Partially Engaged" ${data.stakeholder_status === 'Partially Engaged' ? 'selected' : ''}>Partially Engaged</option>
+                                            <option value="Not Engaged" ${data.stakeholder_status === 'Not Engaged' ? 'selected' : ''}>Not Engaged</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="compliance-buttons">
+                            <button class="btn btn-success ${data.compliance_status === 'compliant' ? 'btn-selected' : ''}" 
+                                    onclick="setCompliance('${clause.id}', 'compliant')">
+                                <i class="fas fa-check"></i> Implemented
+                            </button>
+                            <button class="btn btn-warning ${data.compliance_status === 'partial' ? 'btn-selected' : ''}" 
+                                    onclick="setCompliance('${clause.id}', 'partial')">
+                                <i class="fas fa-minus"></i> Partial
+                            </button>
+                            <button class="btn btn-danger ${data.compliance_status === 'nonCompliant' ? 'btn-selected' : ''}" 
+                                    onclick="setCompliance('${clause.id}', 'nonCompliant')">
+                                <i class="fas fa-times"></i> Not Implemented
+                            </button>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="d-flex justify-content-between">
+                                <small>Implementation Progress</small>
+                                <small id="progress-${clause.id}">
+                                    ${data.compliance_status === 'compliant' ? '100%' : data.compliance_status === 'partial' ? '50%' : '0%'}
+                                </small>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div id="progress-bar-${clause.id}" class="progress-bar 
+                                    ${data.compliance_status === 'compliant' ? 'bg-success' : data.compliance_status === 'partial' ? 'bg-warning' : data.compliance_status === 'nonCompliant' ? 'bg-danger' : ''}" 
+                                    role="progressbar" 
+                                    style="width: ${data.compliance_status === 'compliant' ? '100' : data.compliance_status === 'partial' ? '50' : '0'}%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="evidence-box">
+                            <label for="evidence-${clause.id}"><small><strong><i class="fas fa-link"></i> Evidence/Documentation:</strong></small></label>
+                            <input type="text" id="evidence-${clause.id}" class="form-control" 
+                                   value="${data.evidence_link || ''}"
+                                   placeholder="Document path, URL, or reference..." 
+                                   oninput="saveData('${clause.id}', 'evidence_link', this.value)">
+                        </div>
+
+                        <div id="${clause.id}Remarks" class="remarks-box" 
+                             style="display: ${(data.compliance_status === 'partial' || data.compliance_status === 'nonCompliant') ? 'block' : 'none'};">
+                            <label for="remarks-${clause.id}"><small><strong><i class="fas fa-comment"></i> Remarks / Improvement Actions:</strong></small></label>
+                            <textarea id="remarks-${clause.id}" class="form-control" rows="3" 
+                                      placeholder="Describe gaps, improvement actions, or observations..."
+                                      oninput="saveData('${clause.id}', 'remarks', this.value)">${data.remarks || ''}</textarea>
+                        </div>
+                    </div>
+                `;
+                
+                clauseListContainer.appendChild(clauseItem);
+            });
+
+            updateDashboardSummary();
+        }
+
+        // Save data function
+        function saveData(clauseId, field, value) {
+            if (!complianceData[clauseId]) {
+                complianceData[clauseId] = {};
+            }
+            complianceData[clauseId][field] = value;
+            saveDataToStorage();
+        }
+
+        // Set compliance status
+        function setCompliance(clauseId, status) {
+            saveData(clauseId, 'compliance_status', status);
+            
+            const clauseElement = document.getElementById(`clause-${clauseId}`);
+            const compliantBtn = clauseElement.querySelector('.btn-success');
+            const partialBtn = clauseElement.querySelector('.btn-warning');
+            const nonCompliantBtn = clauseElement.querySelector('.btn-danger');
+            const remarksDiv = document.getElementById(`${clauseId}Remarks`);
+            const progressBar = document.getElementById(`progress-bar-${clauseId}`);
+            const progressText = document.getElementById(`progress-${clauseId}`);
+
+            // Remove selection from all buttons
+            compliantBtn.classList.remove('btn-selected');
+            partialBtn.classList.remove('btn-selected');
+            nonCompliantBtn.classList.remove('btn-selected');
+
+            // Update UI
+            clauseElement.dataset.status = status;
+
+            if (status === 'compliant') {
+                compliantBtn.classList.add('btn-selected');
+                remarksDiv.style.display = 'none';
+                progressBar.style.width = '100%';
+                progressBar.className = 'progress-bar bg-success';
+                progressText.textContent = '100%';
+            } else if (status === 'partial') {
+                partialBtn.classList.add('btn-selected');
+                remarksDiv.style.display = 'block';
+                progressBar.style.width = '50%';
+                progressBar.className = 'progress-bar bg-warning';
+                progressText.textContent = '50%';
+            } else {
+                nonCompliantBtn.classList.add('btn-selected');
+                remarksDiv.style.display = 'block';
+                progressBar.style.width = '0%';
+                progressBar.className = 'progress-bar bg-danger';
+                progressText.textContent = '0%';
+            }
+
+            updateDashboardSummary();
+            checkCompliance();
+        }
+
+        // Filter functionality
+        function filterClauses(filter) {
+            const clauses = document.querySelectorAll('.clause-item');
+            clauses.forEach(clause => {
+                const status = clause.dataset.status;
+                if (filter === 'all' || 
+                    (filter === 'compliant' && status === 'compliant') ||
+                    (filter === 'nonCompliant' && status === 'nonCompliant') ||
+                    (filter === 'partial' && status === 'partial') ||
+                    (filter === 'notSet' && status === 'notSet')) {
+                    clause.style.display = 'block';
+                } else {
+                    clause.style.display = 'none';
+                }
+            });
+        }
+
+        // Update dashboard summary
+        function updateDashboardSummary() {
+            let compliant = 0, partial = 0, nonCompliant = 0, notSet = 0;
+            let riskAssessmentCount = 0, riskTreatmentCount = 0, stakeholderCount = 0, riskReviewCount = 0;
+            
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const status = data.compliance_status || 'notSet';
+                if (status === 'compliant') compliant++;
+                else if (status === 'partial') partial++;
+                else if (status === 'nonCompliant') nonCompliant++;
+                else notSet++;
+
+                // Count risk management elements
+                if (clause.id === 'riskIdentification' && data.risk_assessment_status === 'Completed') riskAssessmentCount++;
+                if (clause.id === 'riskTreatment' && data.risk_treatment_status === 'Implemented') riskTreatmentCount++;
+                if (clause.id === 'processCommunication' && data.stakeholder_status === 'Engaged') stakeholderCount++;
+                if (data.last_review_date) riskReviewCount++;
+            });
+
+            const total = clauses.length;
+            const totalAssessed = compliant + partial + nonCompliant;
+            const compliancePercent = totalAssessed > 0 ? Math.round((compliant / totalAssessed) * 100) : 0;
+
+            document.getElementById('totalClauses').textContent = total;
+            document.getElementById('compliantCount').textContent = compliant;
+            document.getElementById('nonCompliantCount').textContent = nonCompliant;
+            document.getElementById('compliancePercentage').textContent = `${compliancePercent}%`;
+            document.getElementById('riskAssessmentCount').textContent = riskAssessmentCount;
+            document.getElementById('riskTreatmentCount').textContent = riskTreatmentCount;
+            document.getElementById('stakeholderCount').textContent = stakeholderCount;
+            document.getElementById('riskReviewCount').textContent = riskReviewCount;
+        }
+
+        // Check compliance and render charts
+        function checkCompliance() {
+            const complianceSummary = {
+                compliant: 0,
+                partial: 0,
+                nonCompliant: 0,
+                notSet: 0
+            };
+
+            const sectionData = {};
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const status = data.compliance_status || 'notSet';
+                
+                if (status === 'compliant') complianceSummary.compliant++;
+                else if (status === 'partial') complianceSummary.partial++;
+                else if (status === 'nonCompliant') complianceSummary.nonCompliant++;
+                else complianceSummary.notSet++;
+
+                // Section data
+                if (!sectionData[clause.section]) {
+                    sectionData[clause.section] = { compliant: 0, partial: 0, nonCompliant: 0, notSet: 0, total: 0 };
+                }
+                sectionData[clause.section][status]++;
+                sectionData[clause.section].total++;
+            });
+
+            // Update main compliance chart
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('complianceChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Implemented', 'Partially Implemented', 'Not Implemented', 'Not Set'],
+                    datasets: [{
+                        data: [complianceSummary.compliant, complianceSummary.partial, complianceSummary.nonCompliant, complianceSummary.notSet],
+                        backgroundColor: ['#27ae60', '#f39c12', '#e74c3c', '#95a5a6'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: {
+                            display: true,
+                            text: 'Overall Implementation Status',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            });
+
+            // Update section chart
+            if (sectionChartInstance) sectionChartInstance.destroy();
+            const sectionCtx = document.getElementById('sectionChart').getContext('2d');
+            const sections = Object.keys(sectionData);
+            const sectionCompliance = sections.map(section => {
+                const data = sectionData[section];
+                const totalAssessed = data.compliant + data.partial + data.nonCompliant;
+                return totalAssessed > 0 ? Math.round((data.compliant / totalAssessed) * 100) : 0;
+            });
+
+            sectionChartInstance = new Chart(sectionCtx, {
+                type: 'bar',
+                data: {
+                    labels: sections,
+                    datasets: [{
+                        label: 'Implementation %',
+                        data: sectionCompliance,
+                        backgroundColor: '#8e44ad',
+                        borderColor: '#732d91',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Implementation Percentage' }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Implementation by Risk Management Section',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            });
+
+            updateRecommendations(complianceSummary);
+            updateActionItems();
+        }
+
+        // Update action items
+        function updateActionItems() {
+            const actionContainer = document.getElementById('actionItems');
+            actionContainer.innerHTML = '';
+            
+            const today = new Date();
+            let actionCount = 0;
+
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const nextReview = data.next_review_date;
+                const status = data.compliance_status || '';
+                
+                if (nextReview) {
+                    const dueDate = new Date(nextReview);
+                    const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysUntilDue <= 30 || status === 'nonCompliant') {
+                        actionCount++;
+                        const urgency = daysUntilDue <= 7 ? 'danger' : daysUntilDue <= 30 ? 'warning' : 'info';
+                        const actionItem = document.createElement('div');
+                        actionItem.className = `alert alert-${urgency} d-flex justify-content-between align-items-center`;
+                        actionItem.innerHTML = `
+                            <div>
+                                <strong>${clause.name}</strong>
+                                <br>
+                                <small>Due: ${nextReview} (${daysUntilDue} days)</small>
+                                ${status === 'nonCompliant' ? '<br><small class="text-danger"><strong>NOT IMPLEMENTED - REQUIRES ACTION</strong></small>' : ''}
+                            </div>
+                            <button class="btn btn-outline-${urgency} btn-sm" onclick="document.getElementById('clause-${clause.id}').scrollIntoView({behavior: 'smooth'})">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        `;
+                        actionContainer.appendChild(actionItem);
+                    }
+                }
+            });
+
+            if (actionCount === 0) {
+                actionContainer.innerHTML = '<div class="alert alert-success">No urgent actions required. All risk management items are up to date.</div>';
+            }
+        }
+
+        // Update recommendations
+        function updateRecommendations(data) {
+            const recommendations = document.getElementById('recommendationList');
+            recommendations.innerHTML = '';
+
+            function addRecommendation(type, text) {
+                const li = document.createElement('li');
+                li.className = `list-group-item list-group-item-${type} d-flex align-items-center`;
+                li.innerHTML = `<i class="fas fa-chevron-right me-2"></i>${text}`;
+                recommendations.appendChild(li);
+            }
+
+            if (data.nonCompliant > 0) {
+                addRecommendation('danger', `🚨 ${data.nonCompliant} critical requirements not implemented require immediate attention and management focus.`);
+            }
+
+            if (data.partial > 0) {
+                addRecommendation('warning', `⚠️ ${data.partial} partially implemented requirements need gap analysis and improvement plans.`);
+            }
+
+            if (data.notSet > 0) {
+                addRecommendation('info', `ℹ️ ${data.notSet} requirements require implementation assessment and status setting.`);
+            }
+
+            const totalAssessed = data.compliant + data.partial + data.nonCompliant;
+            if (totalAssessed > 0) {
+                const complianceRate = Math.round((data.compliant / totalAssessed) * 100);
+                if (complianceRate >= 90) {
+                    addRecommendation('success', `✅ Excellent! ${complianceRate}% implementation rate. Focus on continual risk management improvement.`);
+                } else if (complianceRate >= 70) {
+                    addRecommendation('info', `📊 ${complianceRate}% implementation rate. Good progress, continue risk management efforts.`);
+                }
+            }
+
+            // Add risk-specific recommendations
+            addRecommendation('secondary', '🔄 Establish and communicate organizational risk criteria and risk appetite.');
+            addRecommendation('secondary', '📋 Implement systematic risk identification process across all organizational activities.');
+            addRecommendation('secondary', '📊 Develop comprehensive risk analysis methodologies suitable for different risk types.');
+            addRecommendation('secondary', '🛡️ Implement appropriate risk treatment plans with clear responsibilities and timelines.');
+            addRecommendation('secondary', '👥 Ensure stakeholder engagement throughout the risk management process.');
+            addRecommendation('secondary', '📈 Establish monitoring and review mechanisms for risk management effectiveness.');
+            addRecommendation('secondary', '🔍 Integrate risk management into organizational decision-making processes.');
+        }
+
+        // Download report
+        async function downloadReport() {
+            const jsPDF = window.jspdf.jsPDF;
+            const doc = new jsPDF();
+
+            // Title Page
+            doc.setFontSize(20);
+            doc.text("ISO 31000:2018 RISK MANAGEMENT COMPLIANCE REPORT", 105, 30, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text(`Organization: [Your Organization Name]`, 105, 45, { align: 'center' });
+            doc.text(`Report Period: ${new Date().toLocaleDateString()}`, 105, 55, { align: 'center' });
+            doc.text(`Generated by: ISO 31000:2018 Compliance Dashboard`, 105, 65, { align: 'center' });
+
+            // Summary Page
+            doc.addPage();
+            doc.setFontSize(16);
+            doc.text("EXECUTIVE SUMMARY", 105, 20, { align: 'center' });
+            
+            const complianceSummary = calculateComplianceData();
+            doc.setFontSize(10);
+            doc.text(`Overall Implementation: ${complianceSummary.percentage}%`, 20, 40);
+            doc.text(`Implemented Requirements: ${complianceSummary.compliant}`, 20, 50);
+            doc.text(`Partially Implemented: ${complianceSummary.partial}`, 20, 60);
+            doc.text(`Not Implemented: ${complianceSummary.nonCompliant}`, 20, 70);
+            doc.text(`Not Assessed: ${complianceSummary.notSet}`, 20, 80);
+
+            // Risk Management Summary
+            doc.text(`Risk Assessments Completed: ${complianceSummary.riskAssessmentCount}`, 20, 100);
+            doc.text(`Risk Treatments Implemented: ${complianceSummary.riskTreatmentCount}`, 20, 110);
+            doc.text(`Stakeholders Engaged: ${complianceSummary.stakeholderCount}`, 20, 120);
+            doc.text(`Risk Reviews Conducted: ${complianceSummary.riskReviewCount}`, 20, 130);
+
+            // Detailed compliance table
+            doc.addPage();
+            doc.setFontSize(14);
+            doc.text("DETAILED IMPLEMENTATION ASSESSMENT", 105, 15, { align: 'center' });
+
+            let rows = [];
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                rows.push([
+                    clause.name,
+                    clause.section,
+                    data.responsibility || 'Not assigned',
+                    data.review_frequency || 'Not set',
+                    data.compliance_status || 'Not set',
+                    data.implementation_level || 'Not set',
+                    data.last_review_date || 'Not reviewed',
+                    data.next_review_date || 'Not scheduled',
+                    data.evidence_link || 'Not provided'
+                ]);
+            });
+
+            doc.autoTable({
+                head: [["Requirement", "Section", "Responsibility", "Frequency", "Status", "Implementation", "Last Review", "Next Review", "Evidence"]],
+                body: rows,
+                startY: 25,
+                theme: 'grid',
+                styles: { 
+                    fontSize: 6,
+                    cellPadding: 2,
+                    valign: 'top'
+                },
+                headStyles: {
+                    fillColor: [142, 68, 173],
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                columnStyles: {
+                    0: { cellWidth: 25 },
+                    1: { cellWidth: 18 },
+                    2: { cellWidth: 18 },
+                    3: { cellWidth: 15 },
+                    4: { cellWidth: 12 },
+                    5: { cellWidth: 15 },
+                    6: { cellWidth: 18 },
+                    7: { cellWidth: 18 },
+                    8: { cellWidth: 25, fontStyle: 'italic' }
+                }
+            });
+
+            doc.save(`ISO31000_Risk_Management_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        function calculateComplianceData() {
+            let compliant = 0, partial = 0, nonCompliant = 0, notSet = 0;
+            let riskAssessmentCount = 0, riskTreatmentCount = 0, stakeholderCount = 0, riskReviewCount = 0;
+            
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const status = data.compliance_status || 'notSet';
+                if (status === 'compliant') compliant++;
+                else if (status === 'partial') partial++;
+                else if (status === 'nonCompliant') nonCompliant++;
+                else notSet++;
+
+                if (clause.id === 'riskIdentification' && data.risk_assessment_status === 'Completed') riskAssessmentCount++;
+                if (clause.id === 'riskTreatment' && data.risk_treatment_status === 'Implemented') riskTreatmentCount++;
+                if (clause.id === 'processCommunication' && data.stakeholder_status === 'Engaged') stakeholderCount++;
+                if (data.last_review_date) riskReviewCount++;
+            });
+            
+            const totalAssessed = compliant + partial + nonCompliant;
+            const percentage = totalAssessed > 0 ? Math.round((compliant / totalAssessed) * 100) : 0;
+            
+            return { compliant, partial, nonCompliant, notSet, percentage, riskAssessmentCount, riskTreatmentCount, stakeholderCount, riskReviewCount };
+        }
+
+        // Export data
+        function exportData() {
+            const exportData = {
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    standard: "ISO 31000:2018",
+                    totalRequirements: clauses.length
+                },
+                complianceData: calculateComplianceData(),
+                clauses: clauses.map(clause => ({
+                    id: clause.id,
+                    name: clause.name,
+                    section: clause.section,
+                    priority: clause.priority,
+                    description: clause.description,
+                    ...complianceData[clause.id]
+                }))
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `iso31000_risk_management_data_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+                localStorage.removeItem('iso31000ComplianceData');
+                complianceData = {};
+                initDashboard();
+                alert('All data has been cleared.');
+            }
+        }
+
+        // Initialize the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
