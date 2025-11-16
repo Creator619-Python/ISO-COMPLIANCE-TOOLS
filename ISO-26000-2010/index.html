@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO 26000:2010 Social Responsibility Compliance Dashboard</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --sr-color: #8e44ad;
+        }
+
+        body {
+            background-color: #f5f6fa;
+        }
+        
+        .btn-selected {
+            opacity: 0.9;
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .clause-item {
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .clause-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .clause-header {
+            font-size: 1.15rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .clause-metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: var(--light);
+            border-radius: 8px;
+        }
+        .compliance-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .evidence-box {
+            margin: 15px 0;
+        }
+        .remarks-box {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 8px;
+            border-left: 4px solid var(--warning);
+        }
+        .section-divider {
+            border-top: 3px solid var(--sr-color);
+            margin: 25px 0 15px 0;
+            padding-top: 20px;
+            background: linear-gradient(135deg, #8e44ad 0%, #c39bd3 100%);
+            color: white;
+            padding: 18px 20px;
+            border-radius: 10px;
+        }
+        .progress-container {
+            margin: 10px 0;
+        }
+        .dashboard-card {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .filter-buttons {
+            margin-bottom: 20px;
+        }
+        .clause-priority {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 8px;
+            margin-left: 10px;
+        }
+        .priority-high { background: var(--danger); color: white; }
+        .priority-medium { background: var(--warning); color: black; }
+        .priority-low { background: var(--success); color: white; }
+        
+        @media (max-width: 768px) {
+            .clause-metadata {
+                grid-template-columns: 1fr;
+            }
+            .compliance-buttons {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+                margin: 5px 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="text-center mb-4">
+            <h1 class="display-5" style="color: var(--sr-color);">
+                <i class="fas fa-hand-holding-heart"></i> ISO 26000:2010 Social Responsibility Compliance Dashboard
+            </h1>
+            <p class="lead">Social Responsibility Core Subjects & Principles Implementation Tracking Tool</p>
+        </div>
+
+        <!-- Dashboard Summary -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="totalClauses">0</h3>
+                    <p class="text-muted mb-0">Total Requirements</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="compliantCount" style="color: var(--success);">0</h3>
+                    <p class="text-muted mb-0">Implemented</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="nonCompliantCount" style="color: var(--danger);">0</h3>
+                    <p class="text-muted mb-0">Not Implemented</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h3 id="compliancePercentage">0%</h3>
+                    <p class="text-muted mb-0">Overall Implementation</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SR Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h4 id="governanceCount">0</h4>
+                    <p class="text-muted mb-0">Governance Practices Implemented</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h4 id="humanRightsCount">0</h4>
+                    <p class="text-muted mb-0">Human Rights Issues Addressed</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h4 id="environmentCount">0</h4>
+                    <p class="text-muted mb-0">Environmental Issues Addressed</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card text-center">
+                    <h4 id="communityCount">0</h4>
+                    <p class="text-muted mb-0">Community Initiatives Implemented</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-buttons">
+            <button class="btn btn-outline-primary btn-sm" onclick="filterClauses('all')">
+                <i class="fas fa-list"></i> All Requirements
+            </button>
+            <button class="btn btn-outline-success btn-sm" onclick="filterClauses('compliant')">
+                <i class="fas fa-check-circle"></i> Implemented
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="filterClauses('nonCompliant')">
+                <i class="fas fa-exclamation-circle"></i> Not Implemented
+            </button>
+            <button class="btn btn-outline-warning btn-sm" onclick="filterClauses('partial')">
+                <i class="fas fa-minus-circle"></i> Partial
+            </button>
+            <button class="btn btn-outline-info btn-sm" onclick="filterClauses('notSet')">
+                <i class="fas fa-question-circle"></i> Not Set
+            </button>
+        </div>
+
+        <!-- Clause List Container -->
+        <div id="clauseList" class="mb-4"></div>
+
+        <!-- Chart and Actions Section -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <canvas id="complianceChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <canvas id="sectionChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <button class="btn btn-primary btn-lg mb-3 mr-3" onclick="checkCompliance()">
+                    <i class="fas fa-sync-alt"></i> Update Implementation Status
+                </button>
+                <button class="btn btn-success btn-lg mb-3 mr-3" onclick="downloadReport()">
+                    <i class="fas fa-download"></i> Download SR Report (PDF)
+                </button>
+                <button class="btn btn-info btn-lg mb-3 mr-3" onclick="exportData()">
+                    <i class="fas fa-file-export"></i> Export Data (JSON)
+                </button>
+                <button class="btn btn-warning btn-lg mb-3" onclick="clearAllData()">
+                    <i class="fas fa-trash"></i> Clear All Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Action Items Section -->
+        <div class="dashboard-card mt-4">
+            <h4><i class="fas fa-tasks"></i> Priority SR Actions & Upcoming Reviews</h4>
+            <div id="actionItems" class="mt-3"></div>
+        </div>
+
+        <!-- Recommendations Section -->
+        <div class="dashboard-card mt-4 mb-5">
+            <h4><i class="fas fa-lightbulb"></i> Social Responsibility Improvement Recommendations</h4>
+            <ul id="recommendationList" class="list-group mt-3"></ul>
+        </div>
+    </div>
+
+    <script>
+        // ISO 26000:2010 - Principles & Core Subjects (Table 2 based)
+        const clauses = [
+            // Principles of Social Responsibility (Clause 4)
+            { id: 'principleAccountability', name: '4.2 Accountability', section: 'Principles', priority: 'high', description: 'Being answerable for the impacts of decisions and activities.' },
+            { id: 'principleTransparency', name: '4.3 Transparency', section: 'Principles', priority: 'high', description: 'Openness about decisions and activities that affect society and the environment.' },
+            { id: 'principleEthical', name: '4.4 Ethical Behaviour', section: 'Principles', priority: 'high', description: 'Behaviour based on honesty, equity and integrity.' },
+            { id: 'principleStakeholders', name: '4.5 Respect for Stakeholder Interests', section: 'Principles', priority: 'medium', description: 'Considering and responding to stakeholder interests.' },
+            { id: 'principleRuleOfLaw', name: '4.6 Respect for the Rule of Law', section: 'Principles', priority: 'high', description: 'Compliance with applicable laws and regulations.' },
+            { id: 'principleNorms', name: '4.7 Respect for International Norms of Behaviour', section: 'Principles', priority: 'medium', description: 'Alignment with international norms of behaviour.' },
+            { id: 'principleHumanRights', name: '4.8 Respect for Human Rights', section: 'Principles', priority: 'high', description: 'Respecting and promoting human rights.' },
+
+            // Core Subject: Organizational Governance (6.2)
+            { id: 'govGovernance', name: '6.2 Organizational Governance', section: 'Organizational Governance', priority: 'high', description: 'System by which the organization makes and implements decisions.' },
+
+            // Core Subject: Human Rights (6.3)
+            { id: 'hrDueDiligence', name: '6.3.3 Due Diligence', section: 'Human Rights', priority: 'high', description: 'Processes to identify and address negative human rights impacts.' },
+            { id: 'hrRiskSituations', name: '6.3.4 Human Rights Risk Situations', section: 'Human Rights', priority: 'high', description: 'Managing situations with heightened human rights risks.' },
+            { id: 'hrComplicity', name: '6.3.5 Avoidance of Complicity', section: 'Human Rights', priority: 'high', description: 'Avoid being complicit in human rights abuses.' },
+            { id: 'hrGrievances', name: '6.3.6 Resolving Grievances', section: 'Human Rights', priority: 'medium', description: 'Processes to address human rights complaints and grievances.' },
+            { id: 'hrDiscrimination', name: '6.3.7 Discrimination and Vulnerable Groups', section: 'Human Rights', priority: 'high', description: 'Prevent discrimination and support vulnerable groups.' },
+            { id: 'hrCivilPolitical', name: '6.3.8 Civil and Political Rights', section: 'Human Rights', priority: 'medium', description: 'Respect civil and political rights.' },
+            { id: 'hrEconomicSocial', name: '6.3.9 Economic, Social and Cultural Rights', section: 'Human Rights', priority: 'medium', description: 'Respect economic, social and cultural rights.' },
+            { id: 'hrFundamentalWork', name: '6.3.10 Fundamental Principles and Rights at Work', section: 'Human Rights', priority: 'high', description: 'Respect fundamental rights at work.' },
+
+            // Core Subject: Labour Practices (6.4)
+            { id: 'labEmployment', name: '6.4.3 Employment and Employment Relationships', section: 'Labour Practices', priority: 'high', description: 'Fair employment relationships and practices.' },
+            { id: 'labConditions', name: '6.4.4 Conditions of Work and Social Protection', section: 'Labour Practices', priority: 'high', description: 'Decent working conditions and social protection.' },
+            { id: 'labSocialDialogue', name: '6.4.5 Social Dialogue', section: 'Labour Practices', priority: 'medium', description: 'Dialogue between management and workers.' },
+            { id: 'labHealthSafety', name: '6.4.6 Health and Safety at Work', section: 'Labour Practices', priority: 'high', description: 'Healthy and safe workplace conditions.' },
+            { id: 'labDevelopment', name: '6.4.7 Human Development and Training in the Workplace', section: 'Labour Practices', priority: 'medium', description: 'Development and training opportunities for workers.' },
+
+            // Core Subject: The Environment (6.5)
+            { id: 'envPollution', name: '6.5.3 Prevention of Pollution', section: 'Environment', priority: 'high', description: 'Prevent and reduce environmental pollution.' },
+            { id: 'envResources', name: '6.5.4 Sustainable Resource Use', section: 'Environment', priority: 'high', description: 'Use resources efficiently and sustainably.' },
+            { id: 'envClimate', name: '6.5.5 Climate Change Mitigation and Adaptation', section: 'Environment', priority: 'high', description: 'Address climate change mitigation and adaptation.' },
+            { id: 'envBiodiversity', name: '6.5.6 Protection of the Environment, Biodiversity and Restoration of Natural Habitats', section: 'Environment', priority: 'medium', description: 'Protect biodiversity and restore habitats.' },
+
+            // Core Subject: Fair Operating Practices (6.6)
+            { id: 'fairAntiCorruption', name: '6.6.3 Anti-Corruption', section: 'Fair Operating Practices', priority: 'high', description: 'Prevent corruption in all forms.' },
+            { id: 'fairPolitical', name: '6.6.4 Responsible Political Involvement', section: 'Fair Operating Practices', priority: 'medium', description: 'Responsible engagement in public policy and politics.' },
+            { id: 'fairCompetition', name: '6.6.5 Fair Competition', section: 'Fair Operating Practices', priority: 'medium', description: 'Respect fair competition practices.' },
+            { id: 'fairValueChain', name: '6.6.6 Promoting Social Responsibility in the Value Chain', section: 'Fair Operating Practices', priority: 'medium', description: 'Promote SR along the value chain.' },
+            { id: 'fairPropertyRights', name: '6.6.7 Respect for Property Rights', section: 'Fair Operating Practices', priority: 'medium', description: 'Respect property and intellectual property rights.' },
+
+            // Core Subject: Consumer Issues (6.7)
+            { id: 'consMarketing', name: '6.7.3 Fair Marketing, Factual and Unbiased Information and Fair Contractual Practices', section: 'Consumer Issues', priority: 'medium', description: 'Fair marketing and truthful information to consumers.' },
+            { id: 'consHealthSafety', name: '6.7.4 Protecting Consumers\' Health and Safety', section: 'Consumer Issues', priority: 'high', description: 'Protect consumer health and safety.' },
+            { id: 'consSustainable', name: '6.7.5 Sustainable Consumption', section: 'Consumer Issues', priority: 'medium', description: 'Promote sustainable consumption patterns.' },
+            { id: 'consServiceSupport', name: '6.7.6 Consumer Service, Support, Complaint and Dispute Resolution', section: 'Consumer Issues', priority: 'medium', description: 'Provide effective consumer service and dispute resolution.' },
+            { id: 'consDataProtection', name: '6.7.7 Consumer Data Protection and Privacy', section: 'Consumer Issues', priority: 'high', description: 'Protect consumer data and privacy.' },
+            { id: 'consEssentialServices', name: '6.7.8 Access to Essential Services', section: 'Consumer Issues', priority: 'medium', description: 'Support access to essential services.' },
+            { id: 'consEducation', name: '6.7.9 Education and Awareness', section: 'Consumer Issues', priority: 'low', description: 'Educate consumers and raise awareness.' },
+
+            // Core Subject: Community Involvement and Development (6.8)
+            { id: 'commInvolvement', name: '6.8.3 Community Involvement', section: 'Community Involvement & Development', priority: 'medium', description: 'Engage with and support local communities.' },
+            { id: 'commEducationCulture', name: '6.8.4 Education and Culture', section: 'Community Involvement & Development', priority: 'medium', description: 'Support education and culture in the community.' },
+            { id: 'commEmploymentSkills', name: '6.8.5 Employment Creation and Skills Development', section: 'Community Involvement & Development', priority: 'medium', description: 'Support employment and skills development.' },
+            { id: 'commTechnology', name: '6.8.6 Technology Development and Access', section: 'Community Involvement & Development', priority: 'low', description: 'Support technology development and access.' },
+            { id: 'commWealthIncome', name: '6.8.7 Wealth and Income Creation', section: 'Community Involvement & Development', priority: 'low', description: 'Contribute to local wealth and income creation.' },
+            { id: 'commHealth', name: '6.8.8 Health', section: 'Community Involvement & Development', priority: 'medium', description: 'Support community health initiatives.' },
+            { id: 'commSocialInvestment', name: '6.8.9 Social Investment', section: 'Community Involvement & Development', priority: 'medium', description: 'Invest in social development projects.' }
+        ];
+
+        let chartInstance;
+        let sectionChartInstance;
+        let complianceData = {};
+
+        // Initialize dashboard
+        function initDashboard() {
+            loadDataFromStorage();
+            renderClauses();
+            checkCompliance();
+        }
+
+        function loadDataFromStorage() {
+            const savedData = localStorage.getItem('iso26000ComplianceData');
+            if (savedData) {
+                complianceData = JSON.parse(savedData);
+            } else {
+                clauses.forEach(clause => {
+                    complianceData[clause.id] = {
+                        compliance_status: '',
+                        remarks: '',
+                        evidence_link: '',
+                        review_frequency: '',
+                        last_review_date: '',
+                        next_review_date: '',
+                        responsibility: '',
+                        implementation_level: ''
+                    };
+                });
+            }
+        }
+
+        function saveDataToStorage() {
+            localStorage.setItem('iso26000ComplianceData', JSON.stringify(complianceData));
+        }
+
+        function renderClauses() {
+            const clauseListContainer = document.getElementById('clauseList');
+            clauseListContainer.innerHTML = '';
+            let currentSection = '';
+
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+
+                // Section divider
+                if (clause.section !== currentSection) {
+                    currentSection = clause.section;
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'section-divider';
+                    sectionDiv.innerHTML = `
+                        <h4 class="mb-1"><i class="fas fa-folder-open"></i> ${currentSection}</h4>
+                        <p class="mb-0">ISO 26000:2010 ${currentSection} requirements</p>
+                    `;
+                    clauseListContainer.appendChild(sectionDiv);
+                }
+
+                const clauseItem = document.createElement('div');
+                clauseItem.className = 'clause-item';
+                clauseItem.id = `clause-${clause.id}`;
+                clauseItem.dataset.section = clause.section;
+                clauseItem.dataset.status = data.compliance_status || 'notSet';
+
+                const priorityClass = `priority-${clause.priority}`;
+
+                clauseItem.innerHTML = `
+                    <div class="card-body p-0">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="clause-header card-title mb-0">
+                                ${clause.name}
+                                <span class="clause-priority ${priorityClass}">${clause.priority.toUpperCase()}</span>
+                            </h5>
+                            <small class="text-muted ml-3" style="max-width: 50%;">${clause.description}</small>
+                        </div>
+
+                        <div class="clause-metadata mt-2">
+                            <div class="form-group mb-2">
+                                <label for="frequency-${clause.id}"><small><strong><i class="fas fa-calendar-alt"></i> Review Frequency:</strong></small></label>
+                                <select id="frequency-${clause.id}" class="form-control form-control-sm" onchange="saveData('${clause.id}', 'review_frequency', this.value)">
+                                    <option value="">Select Frequency</option>
+                                    <option value="Monthly" ${data.review_frequency === 'Monthly' ? 'selected' : ''}>Monthly</option>
+                                    <option value="Quarterly" ${data.review_frequency === 'Quarterly' ? 'selected' : ''}>Quarterly</option>
+                                    <option value="Half-Yearly" ${data.review_frequency === 'Half-Yearly' ? 'selected' : ''}>Half-Yearly</option>
+                                    <option value="Yearly" ${data.review_frequency === 'Yearly' ? 'selected' : ''}>Yearly</option>
+                                    <option value="Continuous" ${data.review_frequency === 'Continuous' ? 'selected' : ''}>Continuous</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="implementation-${clause.id}"><small><strong><i class="fas fa-cog"></i> Implementation Level:</strong></small></label>
+                                <select id="implementation-${clause.id}" class="form-control form-control-sm" onchange="saveData('${clause.id}', 'implementation_level', this.value)">
+                                    <option value="">Select Level</option>
+                                    <option value="Fully Implemented" ${data.implementation_level === 'Fully Implemented' ? 'selected' : ''}>Fully Implemented</option>
+                                    <option value="Partially Implemented" ${data.implementation_level === 'Partially Implemented' ? 'selected' : ''}>Partially Implemented</option>
+                                    <option value="Planned" ${data.implementation_level === 'Planned' ? 'selected' : ''}>Planned</option>
+                                    <option value="Not Started" ${data.implementation_level === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="lastReview-${clause.id}"><small><strong><i class="fas fa-calendar-check"></i> Last Review:</strong></small></label>
+                                <input type="date" id="lastReview-${clause.id}" class="form-control form-control-sm"
+                                       value="${data.last_review_date || ''}"
+                                       onchange="saveData('${clause.id}', 'last_review_date', this.value)">
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="nextReview-${clause.id}"><small><strong><i class="fas fa-calendar-plus"></i> Next Review:</strong></small></label>
+                                <input type="date" id="nextReview-${clause.id}" class="form-control form-control-sm"
+                                       value="${data.next_review_date || ''}"
+                                       onchange="saveData('${clause.id}', 'next_review_date', this.value)">
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="responsibility-${clause.id}"><small><strong><i class="fas fa-user"></i> Responsibility:</strong></small></label>
+                                <input type="text" id="responsibility-${clause.id}" class="form-control form-control-sm"
+                                       value="${data.responsibility || ''}"
+                                       placeholder="e.g., SR Manager / ESG Lead"
+                                       oninput="saveData('${clause.id}', 'responsibility', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="compliance-buttons">
+                            <button class="btn btn-success btn-sm ${data.compliance_status === 'compliant' ? 'btn-selected' : ''}"
+                                    onclick="setCompliance('${clause.id}', 'compliant')">
+                                <i class="fas fa-check"></i> Implemented
+                            </button>
+                            <button class="btn btn-warning btn-sm ${data.compliance_status === 'partial' ? 'btn-selected' : ''}"
+                                    onclick="setCompliance('${clause.id}', 'partial')">
+                                <i class="fas fa-minus"></i> Partial
+                            </button>
+                            <button class="btn btn-danger btn-sm ${data.compliance_status === 'nonCompliant' ? 'btn-selected' : ''}"
+                                    onclick="setCompliance('${clause.id}', 'nonCompliant')">
+                                <i class="fas fa-times"></i> Not Implemented
+                            </button>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="d-flex justify-content-between">
+                                <small>Implementation Progress</small>
+                                <small id="progress-${clause.id}">
+                                    ${data.compliance_status === 'compliant' ? '100%' : data.compliance_status === 'partial' ? '50%' : '0%'}
+                                </small>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div id="progress-bar-${clause.id}" class="progress-bar
+                                    ${data.compliance_status === 'compliant' ? 'bg-success' : data.compliance_status === 'partial' ? 'bg-warning' : data.compliance_status === 'nonCompliant' ? 'bg-danger' : ''}"
+                                    role="progressbar"
+                                    style="width: ${data.compliance_status === 'compliant' ? '100' : data.compliance_status === 'partial' ? '50' : '0'}%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="evidence-box">
+                            <label for="evidence-${clause.id}"><small><strong><i class="fas fa-link"></i> Evidence / Documentation:</strong></small></label>
+                            <input type="text" id="evidence-${clause.id}" class="form-control"
+                                   value="${data.evidence_link || ''}"
+                                   placeholder="Document path, URL, or reference..."
+                                   oninput="saveData('${clause.id}', 'evidence_link', this.value)">
+                        </div>
+
+                        <div id="${clause.id}Remarks" class="remarks-box"
+                             style="display: ${(data.compliance_status === 'partial' || data.compliance_status === 'nonCompliant') ? 'block' : 'none'};">
+                            <label for="remarks-${clause.id}"><small><strong><i class="fas fa-comment"></i> Remarks / Improvement Actions:</strong></small></label>
+                            <textarea id="remarks-${clause.id}" class="form-control" rows="2"
+                                      placeholder="Describe gaps, corrective actions, timelines, etc."
+                                      oninput="saveData('${clause.id}', 'remarks', this.value)">${data.remarks || ''}</textarea>
+                        </div>
+                    </div>
+                `;
+
+                clauseListContainer.appendChild(clauseItem);
+            });
+
+            updateDashboardSummary();
+        }
+
+        function saveData(clauseId, field, value) {
+            if (!complianceData[clauseId]) {
+                complianceData[clauseId] = {};
+            }
+            complianceData[clauseId][field] = value;
+            saveDataToStorage();
+        }
+
+        function setCompliance(clauseId, status) {
+            saveData(clauseId, 'compliance_status', status);
+
+            const clauseElement = document.getElementById(`clause-${clauseId}`);
+            const compliantBtn = clauseElement.querySelector('.btn-success');
+            const partialBtn = clauseElement.querySelector('.btn-warning');
+            const nonCompliantBtn = clauseElement.querySelector('.btn-danger');
+            const remarksDiv = document.getElementById(`${clauseId}Remarks`);
+            const progressBar = document.getElementById(`progress-bar-${clauseId}`);
+            const progressText = document.getElementById(`progress-${clauseId}`);
+
+            compliantBtn.classList.remove('btn-selected');
+            partialBtn.classList.remove('btn-selected');
+            nonCompliantBtn.classList.remove('btn-selected');
+
+            clauseElement.dataset.status = status;
+
+            if (status === 'compliant') {
+                compliantBtn.classList.add('btn-selected');
+                remarksDiv.style.display = 'none';
+                progressBar.style.width = '100%';
+                progressBar.className = 'progress-bar bg-success';
+                progressText.textContent = '100%';
+            } else if (status === 'partial') {
+                partialBtn.classList.add('btn-selected');
+                remarksDiv.style.display = 'block';
+                progressBar.style.width = '50%';
+                progressBar.className = 'progress-bar bg-warning';
+                progressText.textContent = '50%';
+            } else {
+                nonCompliantBtn.classList.add('btn-selected');
+                remarksDiv.style.display = 'block';
+                progressBar.style.width = '0%';
+                progressBar.className = 'progress-bar bg-danger';
+                progressText.textContent = '0%';
+            }
+
+            updateDashboardSummary();
+            checkCompliance();
+        }
+
+        function filterClauses(filter) {
+            const clauseItems = document.querySelectorAll('.clause-item');
+            clauseItems.forEach(clause => {
+                const status = clause.dataset.status;
+                if (filter === 'all' ||
+                    (filter === 'compliant' && status === 'compliant') ||
+                    (filter === 'nonCompliant' && status === 'nonCompliant') ||
+                    (filter === 'partial' && status === 'partial') ||
+                    (filter === 'notSet' && status === 'notSet')) {
+                    clause.style.display = 'block';
+                } else {
+                    clause.style.display = 'none';
+                }
+            });
+        }
+
+        function updateDashboardSummary() {
+            let compliant = 0, partial = 0, nonCompliant = 0, notSet = 0;
+            let governanceCount = 0, humanRightsCount = 0, environmentCount = 0, communityCount = 0;
+
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const status = data.compliance_status || 'notSet';
+
+                if (status === 'compliant') compliant++;
+                else if (status === 'partial') partial++;
+                else if (status === 'nonCompliant') nonCompliant++;
+                else notSet++;
+
+                if (status === 'compliant') {
+                    if (clause.section === 'Organizational Governance') governanceCount++;
+                    if (clause.section === 'Human Rights') humanRightsCount++;
+                    if (clause.section === 'Environment') environmentCount++;
+                    if (clause.section === 'Community Involvement & Development') communityCount++;
+                }
+            });
+
+            const total = clauses.length;
+            const totalAssessed = compliant + partial + nonCompliant;
+            const compliancePercent = totalAssessed > 0 ? Math.round((compliant / totalAssessed) * 100) : 0;
+
+            document.getElementById('totalClauses').textContent = total;
+            document.getElementById('compliantCount').textContent = compliant;
+            document.getElementById('nonCompliantCount').textContent = nonCompliant;
+            document.getElementById('compliancePercentage').textContent = `${compliancePercent}%`;
+
+            document.getElementById('governanceCount').textContent = governanceCount;
+            document.getElementById('humanRightsCount').textContent = humanRightsCount;
+            document.getElementById('environmentCount').textContent = environmentCount;
+            document.getElementById('communityCount').textContent = communityCount;
+        }
+
+        function checkCompliance() {
+            const complianceSummary = {
+                compliant: 0,
+                partial: 0,
+                nonCompliant: 0,
+                notSet: 0
+            };
+
+            const sectionData = {};
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const status = data.compliance_status || 'notSet';
+
+                if (status === 'compliant') complianceSummary.compliant++;
+                else if (status === 'partial') complianceSummary.partial++;
+                else if (status === 'nonCompliant') complianceSummary.nonCompliant++;
+                else complianceSummary.notSet++;
+
+                if (!sectionData[clause.section]) {
+                    sectionData[clause.section] = { compliant: 0, partial: 0, nonCompliant: 0, notSet: 0, total: 0 };
+                }
+                sectionData[clause.section][status]++;
+                sectionData[clause.section].total++;
+            });
+
+            // Doughnut chart
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('complianceChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Implemented', 'Partially Implemented', 'Not Implemented', 'Not Set'],
+                    datasets: [{
+                        data: [
+                            complianceSummary.compliant,
+                            complianceSummary.partial,
+                            complianceSummary.nonCompliant,
+                            complianceSummary.notSet
+                        ],
+                        backgroundColor: ['#27ae60', '#f39c12', '#e74c3c', '#95a5a6'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: {
+                            display: true,
+                            text: 'Overall Social Responsibility Implementation Status',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            });
+
+            // Section bar chart
+            if (sectionChartInstance) sectionChartInstance.destroy();
+            const sectionCtx = document.getElementById('sectionChart').getContext('2d');
+            const sections = Object.keys(sectionData);
+            const sectionCompliance = sections.map(section => {
+                const data = sectionData[section];
+                const totalAssessed = data.compliant + data.partial + data.nonCompliant;
+                return totalAssessed > 0 ? Math.round((data.compliant / totalAssessed) * 100) : 0;
+            });
+
+            sectionChartInstance = new Chart(sectionCtx, {
+                type: 'bar',
+                data: {
+                    labels: sections,
+                    datasets: [{
+                        label: 'Implementation %',
+                        data: sectionCompliance,
+                        backgroundColor: '#8e44ad',
+                        borderColor: '#732d91',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Implementation Percentage' }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Implementation by ISO 26000 Theme',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            });
+
+            updateRecommendations(complianceSummary);
+            updateActionItems();
+        }
+
+        function updateActionItems() {
+            const actionContainer = document.getElementById('actionItems');
+            actionContainer.innerHTML = '';
+
+            const today = new Date();
+            let actionCount = 0;
+
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const nextReview = data.next_review_date;
+                const status = data.compliance_status || '';
+
+                if (nextReview) {
+                    const dueDate = new Date(nextReview);
+                    const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+
+                    if (daysUntilDue <= 30 || status === 'nonCompliant') {
+                        actionCount++;
+                        const urgency = status === 'nonCompliant'
+                            ? 'danger'
+                            : daysUntilDue <= 7 ? 'danger' : daysUntilDue <= 30 ? 'warning' : 'info';
+
+                        const tag = clause.section;
+
+                        const actionItem = document.createElement('div');
+                        actionItem.className = `alert alert-${urgency} d-flex justify-content-between align-items-center`;
+                        actionItem.innerHTML = `
+                            <div>
+                                <strong>${clause.name}</strong> <span class="badge badge-light ml-1">${tag}</span>
+                                <br>
+                                <small>Next Review: ${nextReview} (${daysUntilDue} days)</small>
+                                ${status === 'nonCompliant'
+                                    ? '<br><small class="text-danger"><strong>NOT IMPLEMENTED – PRIORITY ACTION REQUIRED</strong></small>'
+                                    : ''}
+                            </div>
+                            <button class="btn btn-outline-${urgency} btn-sm" onclick="document.getElementById('clause-${clause.id}').scrollIntoView({behavior: 'smooth'})">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        `;
+                        actionContainer.appendChild(actionItem);
+                    }
+                } else if (status === 'nonCompliant') {
+                    // Non-compliant with no next review date set
+                    actionCount++;
+                    const actionItem = document.createElement('div');
+                    actionItem.className = `alert alert-danger d-flex justify-content-between align-items-center`;
+                    actionItem.innerHTML = `
+                        <div>
+                            <strong>${clause.name}</strong> <span class="badge badge-light ml-1">${clause.section}</span>
+                            <br>
+                            <small class="text-danger"><strong>NOT IMPLEMENTED – Set review date and action plan.</strong></small>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm" onclick="document.getElementById('clause-${clause.id}').scrollIntoView({behavior: 'smooth'})">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    `;
+                    actionContainer.appendChild(actionItem);
+                }
+            });
+
+            if (actionCount === 0) {
+                actionContainer.innerHTML = '<div class="alert alert-success mb-0">No urgent social responsibility actions pending. Keep monitoring and improving.</div>';
+            }
+        }
+
+        function updateRecommendations(data) {
+            const recommendations = document.getElementById('recommendationList');
+            recommendations.innerHTML = '';
+
+            function addRecommendation(type, text) {
+                const li = document.createElement('li');
+                li.className = `list-group-item list-group-item-${type} d-flex align-items-center`;
+                li.innerHTML = `<i class="fas fa-chevron-right mr-2"></i>${text}`;
+                recommendations.appendChild(li);
+            }
+
+            if (data.nonCompliant > 0) {
+                addRecommendation('danger', `🚨 ${data.nonCompliant} key social responsibility requirements are not implemented. Develop and approve corrective action plans with clear ownership and timelines.`);
+            }
+
+            if (data.partial > 0) {
+                addRecommendation('warning', `⚠️ ${data.partial} requirements are only partially implemented. Perform gap analysis and prioritize closure of high-risk gaps (human rights, labour, environment).`);
+            }
+
+            if (data.notSet > 0) {
+                addRecommendation('info', `ℹ️ ${data.notSet} requirements have no implementation status set. Complete initial assessment and baseline for all ISO 26000 themes.`);
+            }
+
+            const totalAssessed = data.compliant + data.partial + data.nonCompliant;
+            if (totalAssessed > 0) {
+                const complianceRate = Math.round((data.compliant / totalAssessed) * 100);
+                if (complianceRate >= 90) {
+                    addRecommendation('success', `✅ Strong overall implementation (${complianceRate}%). Focus now on communication, transparency, and continual improvement of social responsibility practices.`);
+                } else if (complianceRate >= 70) {
+                    addRecommendation('info', `📊 Moderate to good implementation (${complianceRate}%). Prioritize high-risk areas such as human rights, labour practices and environmental impacts.`);
+                } else {
+                    addRecommendation('warning', `📉 Implementation level is below 70%. Consider establishing a formal social responsibility roadmap with annual targets, governance, and resources.`);
+                }
+            }
+
+            // Generic SR improvement prompts
+            addRecommendation('secondary', '📘 Develop or update a Social Responsibility policy aligned with ISO 26000 principles and communicate it across the organization.');
+            addRecommendation('secondary', '👥 Strengthen stakeholder identification and engagement, ensuring inclusion of vulnerable and marginalized groups.');
+            addRecommendation('secondary', '🌍 Integrate human rights, labour, environment and fair operating practices into procurement and value chain requirements.');
+            addRecommendation('secondary', '🔁 Establish regular review of SR performance with top management and link findings to organizational strategy.');
+            addRecommendation('secondary', '📣 Enhance transparency by disclosing SR commitments, actions and performance in sustainability or ESG reports.');
+        }
+
+        async function downloadReport() {
+            const jsPDF = window.jspdf.jsPDF;
+            const doc = new jsPDF();
+
+            // Title Page
+            doc.setFontSize(18);
+            doc.text("ISO 26000:2010 SOCIAL RESPONSIBILITY IMPLEMENTATION REPORT", 105, 30, { align: 'center' });
+            doc.setFontSize(11);
+            doc.text("Organization: [Your Organization Name]", 105, 45, { align: 'center' });
+            doc.text(`Report Date: ${new Date().toLocaleDateString()}`, 105, 53, { align: 'center' });
+            doc.text("Generated by: ISO 26000:2010 SR Compliance Dashboard", 105, 61, { align: 'center' });
+
+            // Summary Page
+            doc.addPage();
+            doc.setFontSize(16);
+            doc.text("EXECUTIVE SUMMARY", 105, 20, { align: 'center' });
+
+            const summary = calculateComplianceData();
+            doc.setFontSize(11);
+            doc.text(`Overall Implementation: ${summary.percentage}%`, 20, 40);
+            doc.text(`Implemented Requirements: ${summary.compliant}`, 20, 48);
+            doc.text(`Partially Implemented: ${summary.partial}`, 20, 56);
+            doc.text(`Not Implemented: ${summary.nonCompliant}`, 20, 64);
+            doc.text(`Not Assessed: ${summary.notSet}`, 20, 72);
+
+            doc.text(`Governance Practices Implemented: ${summary.governanceCount}`, 20, 90);
+            doc.text(`Human Rights Issues Implemented: ${summary.humanRightsCount}`, 20, 98);
+            doc.text(`Environmental Issues Implemented: ${summary.environmentCount}`, 20, 106);
+            doc.text(`Community Initiatives Implemented: ${summary.communityCount}`, 20, 114);
+
+            // Detailed table
+            doc.addPage();
+            doc.setFontSize(14);
+            doc.text("DETAILED IMPLEMENTATION ASSESSMENT", 105, 15, { align: 'center' });
+
+            const rows = [];
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                rows.push([
+                    clause.name,
+                    clause.section,
+                    data.responsibility || 'Not assigned',
+                    data.review_frequency || 'Not set',
+                    data.compliance_status || 'Not set',
+                    data.implementation_level || 'Not set',
+                    data.last_review_date || 'Not reviewed',
+                    data.next_review_date || 'Not scheduled',
+                    data.evidence_link || 'Not provided'
+                ]);
+            });
+
+            doc.autoTable({
+                head: [["Requirement", "Theme", "Responsibility", "Frequency", "Status", "Implementation", "Last Review", "Next Review", "Evidence"]],
+                body: rows,
+                startY: 25,
+                theme: 'grid',
+                styles: {
+                    fontSize: 6,
+                    cellPadding: 2,
+                    valign: 'top'
+                },
+                headStyles: {
+                    fillColor: [142, 68, 173],
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                columnStyles: {
+                    0: { cellWidth: 26 },
+                    1: { cellWidth: 18 },
+                    2: { cellWidth: 20 },
+                    3: { cellWidth: 15 },
+                    4: { cellWidth: 13 },
+                    5: { cellWidth: 18 },
+                    6: { cellWidth: 18 },
+                    7: { cellWidth: 18 },
+                    8: { cellWidth: 25 }
+                }
+            });
+
+            doc.save(`ISO26000_SR_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        function calculateComplianceData() {
+            let compliant = 0, partial = 0, nonCompliant = 0, notSet = 0;
+            let governanceCount = 0, humanRightsCount = 0, environmentCount = 0, communityCount = 0;
+
+            clauses.forEach(clause => {
+                const data = complianceData[clause.id] || {};
+                const status = data.compliance_status || 'notSet';
+
+                if (status === 'compliant') compliant++;
+                else if (status === 'partial') partial++;
+                else if (status === 'nonCompliant') nonCompliant++;
+                else notSet++;
+
+                if (status === 'compliant') {
+                    if (clause.section === 'Organizational Governance') governanceCount++;
+                    if (clause.section === 'Human Rights') humanRightsCount++;
+                    if (clause.section === 'Environment') environmentCount++;
+                    if (clause.section === 'Community Involvement & Development') communityCount++;
+                }
+            });
+
+            const totalAssessed = compliant + partial + nonCompliant;
+            const percentage = totalAssessed > 0 ? Math.round((compliant / totalAssessed) * 100) : 0;
+
+            return { compliant, partial, nonCompliant, notSet, percentage, governanceCount, humanRightsCount, environmentCount, communityCount };
+        }
+
+        function exportData() {
+            const exportData = {
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    standard: "ISO 26000:2010",
+                    totalRequirements: clauses.length
+                },
+                complianceSummary: calculateComplianceData(),
+                clauses: clauses.map(clause => ({
+                    id: clause.id,
+                    name: clause.name,
+                    section: clause.section,
+                    priority: clause.priority,
+                    description: clause.description,
+                    ...complianceData[clause.id]
+                }))
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `iso26000_sr_data_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all ISO 26000 social responsibility data? This cannot be undone.')) {
+                localStorage.removeItem('iso26000ComplianceData');
+                complianceData = {};
+                initDashboard();
+                alert('All ISO 26000 compliance data has been cleared.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
