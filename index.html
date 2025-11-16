@@ -136,6 +136,22 @@
     #toast.show {
       opacity: 1;
     }
+
+    /* 🔄 Reload Button */
+    #reloadBtn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s ease;
+    }
+
+    #reloadBtn:hover {
+      background: #1e40af;
+    }
   </style>
 </head>
 <body>
@@ -158,6 +174,7 @@
     </select>
 
     <input type="text" id="searchBox" placeholder="Search clauses, keywords, or themes...">
+    <button id="reloadBtn" onclick="loadIMS()">Reload Data</button>
   </section>
 
   <main id="results">
@@ -181,27 +198,31 @@
 
     async function loadIMS() {
       const container = document.getElementById("results");
-      try {
-        const response = await fetch("Merged_ISO_Clauses.json");
+      const jsonFile = "Merged_ISO_Clauses.json";
+      const basePath = window.location.href.replace(/index\.html$/, "");
+      const jsonURL = basePath + jsonFile;
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status} - File not found or inaccessible`);
-        }
+      console.log("🔍 Fetching JSON from:", jsonURL);
+
+      try {
+        const response = await fetch(jsonURL, { headers: { "Cache-Control": "no-cache" } });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status} — could not load ${jsonFile}`);
 
         const data = await response.json();
 
-        if (!data.Merged_Standards || !Array.isArray(data.Merged_Standards)) {
-          throw new Error("JSON structure invalid — 'Merged_Standards' array not found");
-        }
+        if (!data.Merged_Standards || !Array.isArray(data.Merged_Standards))
+          throw new Error("Invalid JSON structure — missing 'Merged_Standards' array.");
 
+        console.log("✅ JSON loaded successfully:", data.Merged_Standards.length, "entries");
         window.IMSData = data.Merged_Standards;
         renderResults(window.IMSData);
-        showToast(); // ✅ Show success message
+        showToast();
       } catch (error) {
-        console.error("Error loading JSON:", error);
+        console.error("❌ Error loading data:", error);
         container.innerHTML = `
           <div style="text-align:center; color:#dc2626; font-weight:600; padding:20px;">
-            ⚠️ Unable to load data. Please verify that <b>Merged_ISO_Clauses.json</b> 
+            ⚠️ Unable to load data. Please verify that <b>${jsonFile}</b> 
             is in the same folder as this file.<br><br>
             <small>Error: ${error.message}</small>
           </div>
