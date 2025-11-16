@@ -1,337 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Integrated Management System (IMS) Portal</title>
-  <style>
-    :root {
-      --bg-color: #f3f5f7;
-      --text-color: #1f2937;
-      --card-bg: #ffffff;
-      --border-color: #e5e7eb;
-      --accent-color: #2563eb;
-      --header-bg: #ffffffa8;
-      --toast-bg: #10b981;
-    }
-
-    body.dark {
-      --bg-color: #0f172a;
-      --text-color: #f1f5f9;
-      --card-bg: #1e293b;
-      --border-color: #334155;
-      --accent-color: #3b82f6;
-      --header-bg: rgba(30,41,59,0.9);
-      --toast-bg: #059669;
-    }
-
-    body {
-      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
-      background: var(--bg-color);
-      margin: 0;
-      padding: 0;
-      color: var(--text-color);
-      transition: background 0.3s ease, color 0.3s ease;
-    }
-
-    header {
-      text-align: center;
-      padding: 50px 20px 30px;
-      background: var(--header-bg);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-      position: relative;
-    }
-
-    header h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      margin: 0;
-      color: var(--text-color);
-    }
-
-    header p {
-      font-size: 1rem;
-      color: #64748b;
-      margin-top: 10px;
-    }
-
-    .theme-toggle {
-      position: absolute;
-      top: 20px;
-      right: 30px;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 50px;
-      padding: 8px 12px;
-      font-size: 18px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      color: var(--text-color);
-    }
-
-    .theme-toggle:hover {
-      background: var(--accent-color);
-      color: #fff;
-    }
-
-    /* ====== Audit Tool Section ====== */
-    .audit-tools {
-      max-width: 1000px;
-      margin: 40px auto 20px;
-      background: var(--card-bg);
-      padding: 25px 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      border: 1px solid var(--border-color);
-      text-align: center;
-    }
-
-    .audit-tools h2 {
-      color: var(--accent-color);
-      margin-bottom: 10px;
-    }
-
-    .audit-tools p {
-      color: var(--text-color);
-      margin-bottom: 20px;
-    }
-
-    .audit-grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-    }
-
-    .audit-grid button {
-      background: var(--accent-color);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 18px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-
-    .audit-grid button:hover {
-      transform: translateY(-2px);
-      background: #1e40af;
-    }
-
-    /* ====== Clause Viewer ====== */
-    .filter-section {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 15px;
-      background: var(--card-bg);
-      padding: 20px 10px;
-      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
-      border-radius: 10px;
-      max-width: 900px;
-      margin: 30px auto;
-    }
-
-    select, input {
-      padding: 12px 14px;
-      font-size: 15px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      width: 250px;
-      background: var(--bg-color);
-      color: var(--text-color);
-    }
-
-    #results {
-      max-width: 1000px;
-      margin: 30px auto;
-      padding: 0 20px;
-    }
-
-    .clause-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      margin-bottom: 18px;
-      border: 1px solid var(--border-color);
-      transition: all 0.15s ease-in-out;
-    }
-
-    .clause-card:hover {
-      transform: translateY(-2px);
-    }
-
-    .clause-card h3 {
-      color: var(--accent-color);
-      margin-bottom: 8px;
-      font-size: 1.1rem;
-    }
-
-    footer {
-      text-align: center;
-      background: var(--card-bg);
-      padding: 20px;
-      font-size: 14px;
-      color: #6b7280;
-      border-top: 1px solid var(--border-color);
-      margin-top: 40px;
-    }
-
-    #toast {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--toast-bg);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 6px;
-      font-weight: 600;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      z-index: 9999;
-    }
-    #toast.show { opacity: 1; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Integrated Management System (IMS) Dashboard</title>
+<style>
+:root {
+  --bg-color:#f3f5f7;--text-color:#1f2937;--card-bg:#fff;
+  --border-color:#e5e7eb;--accent-color:#2563eb;--header-bg:#ffffffa8;
+  --toast-bg:#10b981;
+}
+body.dark {
+  --bg-color:#0f172a;--text-color:#f1f5f9;--card-bg:#1e293b;
+  --border-color:#334155;--accent-color:#3b82f6;--header-bg:rgba(30,41,59,.9);
+  --toast-bg:#059669;
+}
+body {
+  font-family:"Inter","Segoe UI",Roboto,sans-serif;
+  background:var(--bg-color);color:var(--text-color);margin:0;
+  transition:background .3s,color .3s;
+}
+header {
+  text-align:center;padding:50px 20px 30px;background:var(--header-bg);
+  box-shadow:0 2px 10px rgba(0,0,0,.08);position:relative;
+}
+header h1{margin:0;font-size:2rem;font-weight:700;}
+header p{color:#64748b;margin-top:10px;}
+.theme-toggle{
+  position:absolute;top:20px;right:30px;background:var(--card-bg);
+  border:1px solid var(--border-color);border-radius:50px;
+  padding:8px 12px;font-size:18px;cursor:pointer;
+}
+.theme-toggle:hover{background:var(--accent-color);color:#fff;}
+.compliance-summary,.audit-tools{
+  max-width:1000px;margin:30px auto;background:var(--card-bg);
+  border:1px solid var(--border-color);border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);padding:25px 20px;
+}
+.compliance-summary h2,.audit-tools h2{color:var(--accent-color);}
+.compliance-summary table{width:100%;border-collapse:collapse;margin-top:10px;}
+.compliance-summary th,.compliance-summary td{
+  padding:8px;border-bottom:1px solid var(--border-color);
+}
+.compliance-summary th{color:var(--accent-color);text-align:left;}
+.audit-grid{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:15px;
+}
+.audit-grid button{
+  background:var(--accent-color);color:#fff;border:none;border-radius:6px;
+  padding:10px 18px;cursor:pointer;font-weight:600;transition:all .3s;
+}
+.audit-grid button:hover{transform:translateY(-2px);background:#1e40af;}
+.filter-section{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:15px;
+  background:var(--card-bg);padding:20px 10px;border-radius:10px;
+  max-width:900px;margin:30px auto;box-shadow:0 1px 6px rgba(0,0,0,.08);
+}
+select,input{
+  padding:12px 14px;font-size:15px;border-radius:8px;
+  border:1px solid var(--border-color);background:var(--bg-color);
+  color:var(--text-color);
+}
+#results{max-width:1000px;margin:30px auto;padding:0 20px;}
+.clause-card{
+  background:var(--card-bg);border-radius:12px;padding:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  margin-bottom:18px;border:1px solid var(--border-color);
+}
+.clause-card h3{color:var(--accent-color);margin-bottom:8px;font-size:1.1rem;}
+footer{
+  text-align:center;background:var(--card-bg);padding:20px;
+  font-size:14px;color:#6b7280;border-top:1px solid var(--border-color);
+}
+#toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  background:var(--toast-bg);color:#fff;padding:12px 20px;border-radius:6px;
+  font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.2);
+  opacity:0;transition:opacity .3s;z-index:9999;
+}
+#toast.show{opacity:1;}
+</style>
 </head>
 <body>
-  <header>
-    <button class="theme-toggle" id="themeToggle">🌙</button>
-    <h1>Integrated Management System Dashboard</h1>
-    <p>Explore ISO standards, audit tools, and ESG–SDG linkages in one unified platform</p>
-  </header>
+<header>
+  <button class="theme-toggle" id="themeToggle">🌙</button>
+  <h1>Integrated Management System Dashboard</h1>
+  <p>Audit, track, and reference compliance across multiple ISO Standards</p>
+</header>
 
-  <section class="audit-tools">
-    <h2>Compliance Audit Modules</h2>
-    <p>Select a standard to conduct or review audits.</p>
-    <div class="audit-grid">
-      <a href="9001 2015 compliance tool.html" target="_blank"><button>ISO 9001:2015</button></a>
-      <a href="ISO 14001 2015.html" target="_blank"><button>ISO 14001:2015</button></a>
-      <a href="ISO 45001 2018.html" target="_blank"><button>ISO 45001:2018</button></a>
-      <a href="ISO 26000 2010.html" target="_blank"><button>ISO 26000:2010</button></a>
-      <a href="ISO 31000 2018.html" target="_blank"><button>ISO 31000:2018</button></a>
-      <a href="ISO 22301.html" target="_blank"><button>ISO 22301:2019</button></a>
-      <a href="ISO 27001.html" target="_blank"><button>ISO 27001:2022</button></a>
-      <a href="ISO 50001.html" target="_blank"><button>ISO 50001:2018</button></a>
-    </div>
-  </section>
+<section class="compliance-summary">
+  <h2>IMS Compliance Overview</h2>
+  <div id="complianceTable"><p>Loading compliance data...</p></div>
+</section>
 
-  <section class="filter-section">
-    <select id="standardFilter">
-      <option value="">All Standards</option>
-      <option value="ISO 9001:2015">ISO 9001</option>
-      <option value="ISO 14001:2015">ISO 14001</option>
-      <option value="ISO 45001:2018">ISO 45001</option>
-      <option value="ISO 26000:2010">ISO 26000</option>
-      <option value="ISO 31000:2018">ISO 31000</option>
-      <option value="ISO 22301:2019">ISO 22301</option>
-      <option value="ISO/IEC 27001:2022">ISO 27001</option>
-      <option value="ISO 50001:2018">ISO 50001</option>
-    </select>
-    <input type="text" id="searchBox" placeholder="Search clauses, keywords, or themes...">
-  </section>
+<section class="audit-tools">
+  <h2>Compliance Audit Modules</h2>
+  <p>Select a standard to conduct or review audits.</p>
+  <div class="audit-grid">
+    <a href="9001%202015/" target="_blank"><button>ISO 9001:2015</button></a>
+    <a href="14001%202015/" target="_blank"><button>ISO 14001:2015</button></a>
+    <a href="45001%202018/" target="_blank"><button>ISO 45001:2018</button></a>
+    <a href="26000%202010/" target="_blank"><button>ISO 26000:2010</button></a>
+    <a href="31000%202018/" target="_blank"><button>ISO 31000:2018</button></a>
+    <a href="22301%202019/" target="_blank"><button>ISO 22301:2019</button></a>
+    <a href="27000%202022/" target="_blank"><button>ISO 27000:2022</button></a>
+    <a href="50001%202018/" target="_blank"><button>ISO 50001:2018</button></a>
+  </div>
+</section>
 
-  <main id="results">
-    <p style="text-align:center; color:#94a3b8;">Loading knowledge base...</p>
-  </main>
+<section class="filter-section">
+  <select id="standardFilter">
+    <option value="">All Standards</option>
+    <option value="ISO 9001:2015">ISO 9001</option>
+    <option value="ISO 14001:2015">ISO 14001</option>
+    <option value="ISO 45001:2018">ISO 45001</option>
+    <option value="ISO 26000:2010">ISO 26000</option>
+    <option value="ISO 31000:2018">ISO 31000</option>
+    <option value="ISO 22301:2019">ISO 22301</option>
+    <option value="ISO 27000:2022">ISO 27000</option>
+    <option value="ISO 50001:2018">ISO 50001</option>
+  </select>
+  <input type="text" id="searchBox" placeholder="Search clauses, keywords, or themes..." />
+</section>
 
-  <div id="toast">Data loaded successfully ✅</div>
+<main id="results">
+  <p style="text-align:center;color:#94a3b8;">Loading knowledge base...</p>
+</main>
 
-  <footer>
-    © <span id="year"></span> Integrated Management System Knowledge Base | Created by Gokul
-  </footer>
+<div id="toast">Data loaded successfully ✅</div>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
+<footer>© <span id="year"></span> Integrated Management System | Created by Gokul</footer>
 
-    function showToast() {
-      const toast = document.getElementById("toast");
-      toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 2500);
-    }
+<script>
+document.getElementById("year").textContent=new Date().getFullYear();
 
-    async function loadIMS() {
-      const container = document.getElementById("results");
-      const jsonFile = "Merged_ISO_Clauses.json";
-      const jsonURL = window.location.href.replace(/index\.html$/, "") + jsonFile;
+// toast
+function showToast(){const t=document.getElementById("toast");t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
 
-      try {
-        const response = await fetch(jsonURL, { headers: { "Cache-Control": "no-cache" } });
-        if (!response.ok) throw new Error(`HTTP ${response.status} — could not load ${jsonFile}`);
+// load clauses
+async function loadIMS(){
+  const c=document.getElementById("results");
+  try{
+    const r=await fetch("Merged_ISO_Clauses.json",{cache:"no-cache"});
+    if(!r.ok)throw new Error("Unable to load JSON file");
+    const d=await r.json();
+    window.IMSData=d.Merged_Standards||[];
+    renderResults(window.IMSData);showToast();
+  }catch(e){
+    c.innerHTML=`<p style='text-align:center;color:red;'>Error loading data: ${e.message}</p>`;
+  }
+}
 
-        const data = await response.json();
-        window.IMSData = data.Merged_Standards;
-        renderResults(window.IMSData);
-        showToast();
-      } catch (error) {
-        container.innerHTML = `<div style='text-align:center;color:#dc2626;padding:20px;'>⚠️ Error: ${error.message}</div>`;
-      }
-    }
+// render clauses
+function renderResults(arr){
+  const c=document.getElementById("results");c.innerHTML="";
+  if(!arr.length){c.innerHTML="<p style='text-align:center;color:#999;'>No results found.</p>";return;}
+  arr.forEach(x=>{
+    const d=document.createElement("div");
+    d.className="clause-card";
+    d.innerHTML=`<h3>${x.Standard} — Clause ${x.Clause}</h3>
+    <p><strong>${x.Title}</strong></p><p>${x.Purpose}</p>
+    <details><summary>More details</summary>
+    <p><b>Evidence:</b> ${x.Evidence}</p>
+    <p><b>Integration:</b> ${x.Integration}</p>
+    <p><b>Example:</b> ${x.Example}</p></details>`;
+    c.appendChild(d);
+  });
+}
 
-    function renderResults(clauses) {
-      const container = document.getElementById("results");
-      container.innerHTML = "";
-      if (!clauses || clauses.length === 0) {
-        container.innerHTML = "<p style='text-align:center; color:#999;'>No results found.</p>";
-        return;
-      }
-      clauses.forEach((c) => {
-        const div = document.createElement("div");
-        div.className = "clause-card";
-        div.innerHTML = `
-          <h3>${c.Standard} — Clause ${c.Clause}</h3>
-          <p><strong>${c.Title}</strong></p>
-          <p>${c.Purpose}</p>
-          <details>
-            <summary>More details</summary>
-            <p><b>Evidence:</b> ${c.Evidence}</p>
-            <p><b>Integration:</b> ${c.Integration}</p>
-            <p><b>Example:</b> ${c.Example}</p>
-          </details>`;
-        container.appendChild(div);
-      });
-    }
+// filter
+function setupFilters(){
+  document.getElementById("standardFilter").addEventListener("change",filterData);
+  document.getElementById("searchBox").addEventListener("input",filterData);
+}
+function filterData(){
+  const f=document.getElementById("standardFilter").value.toLowerCase();
+  const q=document.getElementById("searchBox").value.toLowerCase();
+  const res=window.IMSData.filter(x=>
+    (!f||x.Standard.toLowerCase().includes(f))&&
+    (x.Clause.toLowerCase().includes(q)||x.Title.toLowerCase().includes(q)||x.Purpose.toLowerCase().includes(q))
+  );
+  renderResults(res);
+}
 
-    function setupFilters() {
-      document.getElementById("standardFilter").addEventListener("change", filterData);
-      document.getElementById("searchBox").addEventListener("input", filterData);
-    }
+// compliance overview
+function renderComplianceOverview(){
+  const stds=[
+    {name:"ISO 9001:2015",key:"ISO_9001_compliance"},
+    {name:"ISO 14001:2015",key:"ISO_14001_compliance"},
+    {name:"ISO 45001:2018",key:"ISO_45001_compliance"},
+    {name:"ISO 26000:2010",key:"ISO_26000_compliance"},
+    {name:"ISO 31000:2018",key:"ISO_31000_compliance"},
+    {name:"ISO 22301:2019",key:"ISO_22301_compliance"},
+    {name:"ISO 27000:2022",key:"ISO_27000_compliance"},
+    {name:"ISO 50001:2018",key:"ISO_50001_compliance"}
+  ];
+  let total=0,count=0,html=`<table><tr><th>Standard</th><th>Compliance</th><th>%</th></tr>`;
+  stds.forEach(s=>{
+    const v=parseFloat(localStorage.getItem(s.key));
+    const p=isNaN(v)?0:v;total+=p;count++;
+    const c=p>=90?"#16a34a":p>=75?"#eab308":"#dc2626";
+    html+=`<tr><td>${s.name}</td>
+    <td><div style="background:#e5e7eb;border-radius:4px;overflow:hidden;height:10px;">
+    <div style="width:${p}%;height:10px;background:${c};"></div></div></td>
+    <td align="right">${p.toFixed(1)}%</td></tr>`;
+  });
+  const avg=(total/count).toFixed(1);
+  html+=`<tr><td><b>Overall IMS Compliance</b></td>
+  <td><div style="background:#e5e7eb;border-radius:4px;overflow:hidden;height:12px;">
+  <div style="width:${avg}%;height:12px;background:#2563eb;"></div></div></td>
+  <td align="right"><b>${avg}%</b></td></tr></table>
+  <p style="margin-top:10px;color:#64748b;font-size:14px;">(Data auto-fetched from latest saved audit results)</p>`;
+  document.getElementById("complianceTable").innerHTML=html;
+}
 
-    function filterData() {
-      const filter = document.getElementById("standardFilter").value.toLowerCase();
-      const query = document.getElementById("searchBox").value.toLowerCase();
-      const filtered = window.IMSData.filter(
-        (c) =>
-          (!filter || c.Standard.toLowerCase().includes(filter)) &&
-          (c.Clause.toLowerCase().includes(query) ||
-            c.Title.toLowerCase().includes(query) ||
-            c.Purpose.toLowerCase().includes(query))
-      );
-      renderResults(filtered);
-    }
+// dark mode
+const t=document.getElementById("themeToggle");
+t.addEventListener("click",()=>{document.body.classList.toggle("dark");
+const d=document.body.classList.contains("dark");
+t.textContent=d?"☀️":"🌙";localStorage.setItem("theme",d?"dark":"light");});
+if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");t.textContent="☀️";}
 
-    // 🌙 Dark Mode Toggle
-    const toggleBtn = document.getElementById("themeToggle");
-    toggleBtn.addEventListener("click", () => {
-      document.body.classList.toggle("dark");
-      const isDark = document.body.classList.contains("dark");
-      toggleBtn.textContent = isDark ? "☀️" : "🌙";
-      localStorage.setItem("theme", isDark ? "dark" : "light");
-    });
-
-    if (localStorage.getItem("theme") === "dark") {
-      document.body.classList.add("dark");
-      document.getElementById("themeToggle").textContent = "☀️";
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      loadIMS();
-      setupFilters();
-    });
-  </script>
+// init
+document.addEventListener("DOMContentLoaded",()=>{
+  loadIMS();setupFilters();renderComplianceOverview();
+  // optional auto-refresh every 15 s
+  setInterval(renderComplianceOverview,15000);
+});
+</script>
 </body>
 </html>
