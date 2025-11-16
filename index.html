@@ -1,232 +1,440 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Integrated Management System (IMS) Dashboard</title>
-<style>
-:root {
-  --bg-color:#f3f5f7;--text-color:#1f2937;--card-bg:#fff;
-  --border-color:#e5e7eb;--accent-color:#2563eb;--header-bg:#ffffffa8;
-  --toast-bg:#10b981;
-}
-body.dark {
-  --bg-color:#0f172a;--text-color:#f1f5f9;--card-bg:#1e293b;
-  --border-color:#334155;--accent-color:#3b82f6;--header-bg:rgba(30,41,59,.9);
-  --toast-bg:#059669;
-}
-body {
-  font-family:"Inter","Segoe UI",Roboto,sans-serif;
-  background:var(--bg-color);color:var(--text-color);margin:0;
-  transition:background .3s,color .3s;
-}
-header {
-  text-align:center;padding:50px 20px 30px;background:var(--header-bg);
-  box-shadow:0 2px 10px rgba(0,0,0,.08);position:relative;
-}
-header h1{margin:0;font-size:2rem;font-weight:700;}
-header p{color:#64748b;margin-top:10px;}
-.theme-toggle{
-  position:absolute;top:20px;right:30px;background:var(--card-bg);
-  border:1px solid var(--border-color);border-radius:50px;
-  padding:8px 12px;font-size:18px;cursor:pointer;
-}
-.theme-toggle:hover{background:var(--accent-color);color:#fff;}
-.compliance-summary,.audit-tools{
-  max-width:1000px;margin:30px auto;background:var(--card-bg);
-  border:1px solid var(--border-color);border-radius:12px;
-  box-shadow:0 2px 8px rgba(0,0,0,.08);padding:25px 20px;
-}
-.compliance-summary h2,.audit-tools h2{color:var(--accent-color);}
-.compliance-summary table{width:100%;border-collapse:collapse;margin-top:10px;}
-.compliance-summary th,.compliance-summary td{
-  padding:8px;border-bottom:1px solid var(--border-color);
-}
-.compliance-summary th{color:var(--accent-color);text-align:left;}
-.audit-grid{
-  display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:15px;
-}
-.audit-grid button{
-  background:var(--accent-color);color:#fff;border:none;border-radius:6px;
-  padding:10px 18px;cursor:pointer;font-weight:600;transition:all .3s;
-}
-.audit-grid button:hover{transform:translateY(-2px);background:#1e40af;}
-.filter-section{
-  display:flex;flex-wrap:wrap;justify-content:center;gap:15px;
-  background:var(--card-bg);padding:20px 10px;border-radius:10px;
-  max-width:900px;margin:30px auto;box-shadow:0 1px 6px rgba(0,0,0,.08);
-}
-select,input{
-  padding:12px 14px;font-size:15px;border-radius:8px;
-  border:1px solid var(--border-color);background:var(--bg-color);
-  color:var(--text-color);
-}
-#results{max-width:1000px;margin:30px auto;padding:0 20px;}
-.clause-card{
-  background:var(--card-bg);border-radius:12px;padding:20px;
-  box-shadow:0 2px 8px rgba(0,0,0,.08);
-  margin-bottom:18px;border:1px solid var(--border-color);
-}
-.clause-card h3{color:var(--accent-color);margin-bottom:8px;font-size:1.1rem;}
-footer{
-  text-align:center;background:var(--card-bg);padding:20px;
-  font-size:14px;color:#6b7280;border-top:1px solid var(--border-color);
-}
-#toast{
-  position:fixed;top:20px;left:50%;transform:translateX(-50%);
-  background:var(--toast-bg);color:#fff;padding:12px 20px;border-radius:6px;
-  font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.2);
-  opacity:0;transition:opacity .3s;z-index:9999;
-}
-#toast.show{opacity:1;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO Standards Directory</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --background-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        body.dark {
+            --primary-color: #3b82f6;
+            --secondary-color: #94a3b8;
+            --background-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f1f5f9;
+            --border-color: #334155;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--primary-color), #1e40af);
+            color: white;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .search-container {
+            display: flex;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        #searchInput {
+            flex: 1;
+            padding: 12px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        #searchInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        .standards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .standard-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .standard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .standard-code {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .standard-year {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .standard-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .standard-description {
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .path-info {
+            background-color: rgba(37, 99, 235, 0.1);
+            border-left: 4px solid var(--primary-color);
+            padding: 12px 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+        }
+
+        .path-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .path-value {
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1e40af;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--secondary-color);
+            grid-column: 1 / -1;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: var(--secondary-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .standards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-<header>
-  <button class="theme-toggle" id="themeToggle">🌙</button>
-  <h1>Integrated Management System Dashboard</h1>
-  <p>Audit, track, and reference compliance across multiple ISO Standards</p>
-</header>
+    <div class="container">
+        <header>
+            <button class="theme-toggle" id="themeToggle">🌙</button>
+            <h1>ISO Standards Directory</h1>
+            <p class="subtitle">Browse and access all your ISO standards with organized directory paths</p>
+        </header>
 
-<section class="compliance-summary">
-  <h2>IMS Compliance Overview</h2>
-  <div id="complianceTable"><p>Loading compliance data...</p></div>
-</section>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search ISO standards by name, code, or description...">
+        </div>
 
-<section class="audit-tools">
-  <h2>Compliance Audit Modules</h2>
-  <p>Select a standard to conduct or review audits.</p>
-  <div class="audit-grid">
-    <a href="9001%202015/" target="_blank"><button>ISO 9001:2015</button></a>
-    <a href="14001%202015/" target="_blank"><button>ISO 14001:2015</button></a>
-    <a href="45001%202018/" target="_blank"><button>ISO 45001:2018</button></a>
-    <a href="26000%202010/" target="_blank"><button>ISO 26000:2010</button></a>
-    <a href="31000%202018/" target="_blank"><button>ISO 31000:2018</button></a>
-    <a href="22301%202019/" target="_blank"><button>ISO 22301:2019</button></a>
-    <a href="27000%202022/" target="_blank"><button>ISO 27000:2022</button></a>
-    <a href="50001%202018/" target="_blank"><button>ISO 50001:2018</button></a>
-  </div>
-</section>
+        <div class="standards-grid" id="standardsGrid">
+            <!-- ISO standards will be dynamically inserted here -->
+        </div>
 
-<section class="filter-section">
-  <select id="standardFilter">
-    <option value="">All Standards</option>
-    <option value="ISO 9001:2015">ISO 9001</option>
-    <option value="ISO 14001:2015">ISO 14001</option>
-    <option value="ISO 45001:2018">ISO 45001</option>
-    <option value="ISO 26000:2010">ISO 26000</option>
-    <option value="ISO 31000:2018">ISO 31000</option>
-    <option value="ISO 22301:2019">ISO 22301</option>
-    <option value="ISO 27000:2022">ISO 27000</option>
-    <option value="ISO 50001:2018">ISO 50001</option>
-  </select>
-  <input type="text" id="searchBox" placeholder="Search clauses, keywords, or themes..." />
-</section>
+        <footer>
+            <p>© <span id="currentYear"></span> Integrated Management System | Created by Gokul</p>
+        </footer>
+    </div>
 
-<main id="results">
-  <p style="text-align:center;color:#94a3b8;">Loading knowledge base...</p>
-</main>
+    <script>
+        // ISO Standards Data
+        const isoStandards = [
+            {
+                code: "ISO 14001",
+                year: "2015",
+                title: "Environmental Management Systems",
+                description: "Requirements with guidance for use to help organizations improve their environmental performance through more efficient use of resources and reduction of waste.",
+                path: "ISO-14001-2015/PATH OF ISO 14001 2015"
+            },
+            {
+                code: "ISO 22301",
+                year: "2019",
+                title: "Security and Resilience - Business Continuity Management Systems",
+                description: "Framework to plan, establish, implement, operate, monitor, review, maintain and continually improve a business continuity management system.",
+                path: "ISO-22301-2019/PATH OF ISO 22301"
+            },
+            {
+                code: "ISO 26000",
+                year: "2010",
+                title: "Social Responsibility",
+                description: "Guidance on social responsibility to help organizations contribute to sustainable development and encourage them to go beyond legal compliance.",
+                path: "ISO-26000-2010/PATH OF ISO-26000-2010"
+            },
+            {
+                code: "ISO 27001",
+                year: "2022",
+                title: "Information Security Management",
+                description: "Specifies the requirements for establishing, implementing, maintaining and continually improving an information security management system.",
+                path: "ISO-27001-2022/PATH OF ISO-27001-2022"
+            },
+            {
+                code: "ISO 31000",
+                year: "2018",
+                title: "Risk Management Guidelines",
+                description: "Principles and generic guidelines on risk management to assist organizations to manage the effects of uncertainty on their objectives.",
+                path: "ISO-31000-2018/PATH OF ISO-31000-2018"
+            },
+            {
+                code: "ISO 45001",
+                year: "2018",
+                title: "Occupational Health and Safety Management Systems",
+                description: "Requirements for an occupational health and safety (OH&S) management system to enable organizations to provide safe and healthy workplaces.",
+                path: "ISO-45001-2018/PATH OF ISO-45001-2018"
+            },
+            {
+                code: "ISO 50001",
+                year: "2018",
+                title: "Energy Management Systems",
+                description: "Framework for establishing, implementing, maintaining and improving an energy management system to enable organizations to follow a systematic approach.",
+                path: "ISO-50001-2018/PATH OF ISO-50001-2018"
+            },
+            {
+                code: "ISO 9001",
+                year: "2015",
+                title: "Quality Management Systems",
+                description: "Specifies requirements for a quality management system when an organization needs to demonstrate its ability to consistently provide products and services.",
+                path: "ISO-9001-2015/PATH OF ISO-9001-2015"
+            }
+        ];
 
-<div id="toast">Data loaded successfully ✅</div>
+        // DOM Elements
+        const standardsGrid = document.getElementById('standardsGrid');
+        const searchInput = document.getElementById('searchInput');
+        const themeToggle = document.getElementById('themeToggle');
+        const currentYear = document.getElementById('currentYear');
 
-<footer>© <span id="year"></span> Integrated Management System | Created by Gokul</footer>
+        // Set current year
+        currentYear.textContent = new Date().getFullYear();
 
-<script>
-document.getElementById("year").textContent=new Date().getFullYear();
+        // Render ISO Standards
+        function renderStandards(standards) {
+            standardsGrid.innerHTML = '';
+            
+            if (standards.length === 0) {
+                standardsGrid.innerHTML = '<div class="no-results">No matching ISO standards found. Try a different search term.</div>';
+                return;
+            }
+            
+            standards.forEach(standard => {
+                const card = document.createElement('div');
+                card.className = 'standard-card';
+                
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="standard-code">${standard.code}</div>
+                        <div class="standard-year">${standard.year}</div>
+                    </div>
+                    <div class="standard-title">${standard.title}</div>
+                    <div class="standard-description">${standard.description}</div>
+                    <div class="path-info">
+                        <div class="path-label">Directory Path</div>
+                        <div class="path-value">${standard.path}</div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline">
+                            <span>📁</span> Open Directory
+                        </button>
+                        <button class="btn btn-primary">
+                            <span>🔍</span> View Details
+                        </button>
+                    </div>
+                `;
+                
+                standardsGrid.appendChild(card);
+            });
+        }
 
-// toast
-function showToast(){const t=document.getElementById("toast");t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
+        // Search functionality
+        function filterStandards() {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                renderStandards(isoStandards);
+                return;
+            }
+            
+            const filteredStandards = isoStandards.filter(standard => {
+                return (
+                    standard.code.toLowerCase().includes(searchTerm) ||
+                    standard.title.toLowerCase().includes(searchTerm) ||
+                    standard.description.toLowerCase().includes(searchTerm) ||
+                    standard.year.includes(searchTerm)
+                );
+            });
+            
+            renderStandards(filteredStandards);
+        }
 
-// load clauses
-async function loadIMS(){
-  const c=document.getElementById("results");
-  try{
-    const r=await fetch("Merged_ISO_Clauses.json",{cache:"no-cache"});
-    if(!r.ok)throw new Error("Unable to load JSON file");
-    const d=await r.json();
-    window.IMSData=d.Merged_Standards||[];
-    renderResults(window.IMSData);showToast();
-  }catch(e){
-    c.innerHTML=`<p style='text-align:center;color:red;'>Error loading data: ${e.message}</p>`;
-  }
-}
+        // Theme toggle functionality
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            themeToggle.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
 
-// render clauses
-function renderResults(arr){
-  const c=document.getElementById("results");c.innerHTML="";
-  if(!arr.length){c.innerHTML="<p style='text-align:center;color:#999;'>No results found.</p>";return;}
-  arr.forEach(x=>{
-    const d=document.createElement("div");
-    d.className="clause-card";
-    d.innerHTML=`<h3>${x.Standard} — Clause ${x.Clause}</h3>
-    <p><strong>${x.Title}</strong></p><p>${x.Purpose}</p>
-    <details><summary>More details</summary>
-    <p><b>Evidence:</b> ${x.Evidence}</p>
-    <p><b>Integration:</b> ${x.Integration}</p>
-    <p><b>Example:</b> ${x.Example}</p></details>`;
-    c.appendChild(d);
-  });
-}
+        // Initialize
+        function init() {
+            // Set initial theme
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark');
+                themeToggle.textContent = '☀️';
+            }
+            
+            // Render all standards initially
+            renderStandards(isoStandards);
+            
+            // Event listeners
+            searchInput.addEventListener('input', filterStandards);
+            themeToggle.addEventListener('click', toggleTheme);
+        }
 
-// filter
-function setupFilters(){
-  document.getElementById("standardFilter").addEventListener("change",filterData);
-  document.getElementById("searchBox").addEventListener("input",filterData);
-}
-function filterData(){
-  const f=document.getElementById("standardFilter").value.toLowerCase();
-  const q=document.getElementById("searchBox").value.toLowerCase();
-  const res=window.IMSData.filter(x=>
-    (!f||x.Standard.toLowerCase().includes(f))&&
-    (x.Clause.toLowerCase().includes(q)||x.Title.toLowerCase().includes(q)||x.Purpose.toLowerCase().includes(q))
-  );
-  renderResults(res);
-}
-
-// compliance overview
-function renderComplianceOverview(){
-  const stds=[
-    {name:"ISO 9001:2015",key:"ISO_9001_compliance"},
-    {name:"ISO 14001:2015",key:"ISO_14001_compliance"},
-    {name:"ISO 45001:2018",key:"ISO_45001_compliance"},
-    {name:"ISO 26000:2010",key:"ISO_26000_compliance"},
-    {name:"ISO 31000:2018",key:"ISO_31000_compliance"},
-    {name:"ISO 22301:2019",key:"ISO_22301_compliance"},
-    {name:"ISO 27000:2022",key:"ISO_27000_compliance"},
-    {name:"ISO 50001:2018",key:"ISO_50001_compliance"}
-  ];
-  let total=0,count=0,html=`<table><tr><th>Standard</th><th>Compliance</th><th>%</th></tr>`;
-  stds.forEach(s=>{
-    const v=parseFloat(localStorage.getItem(s.key));
-    const p=isNaN(v)?0:v;total+=p;count++;
-    const c=p>=90?"#16a34a":p>=75?"#eab308":"#dc2626";
-    html+=`<tr><td>${s.name}</td>
-    <td><div style="background:#e5e7eb;border-radius:4px;overflow:hidden;height:10px;">
-    <div style="width:${p}%;height:10px;background:${c};"></div></div></td>
-    <td align="right">${p.toFixed(1)}%</td></tr>`;
-  });
-  const avg=(total/count).toFixed(1);
-  html+=`<tr><td><b>Overall IMS Compliance</b></td>
-  <td><div style="background:#e5e7eb;border-radius:4px;overflow:hidden;height:12px;">
-  <div style="width:${avg}%;height:12px;background:#2563eb;"></div></div></td>
-  <td align="right"><b>${avg}%</b></td></tr></table>
-  <p style="margin-top:10px;color:#64748b;font-size:14px;">(Data auto-fetched from latest saved audit results)</p>`;
-  document.getElementById("complianceTable").innerHTML=html;
-}
-
-// dark mode
-const t=document.getElementById("themeToggle");
-t.addEventListener("click",()=>{document.body.classList.toggle("dark");
-const d=document.body.classList.contains("dark");
-t.textContent=d?"☀️":"🌙";localStorage.setItem("theme",d?"dark":"light");});
-if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");t.textContent="☀️";}
-
-// init
-document.addEventListener("DOMContentLoaded",()=>{
-  loadIMS();setupFilters();renderComplianceOverview();
-  // optional auto-refresh every 15 s
-  setInterval(renderComplianceOverview,15000);
-});
-</script>
+        // Start the application
+        init();
+    </script>
 </body>
 </html>
