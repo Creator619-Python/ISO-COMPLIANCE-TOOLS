@@ -71,6 +71,14 @@
     }
 
     .theme-toggle:hover { transform: rotate(20deg); }
+
+    .clause-search {
+      margin-bottom: 15px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 100%;
+    }
   </style>
 </head>
 
@@ -121,7 +129,10 @@
             <h5 id="clauseModalLabel" class="modal-title">Clauses</h5>
             <button class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body" id="clauseContainer"></div>
+          <div class="modal-body">
+            <input type="text" id="clauseSearch" class="clause-search" placeholder="🔍 Filter clauses..." />
+            <div id="clauseContainer"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -228,21 +239,23 @@
       });
     }
 
-    // === Show Clauses ===
+    // === Show Clauses + Search ===
     async function showClauses(stdName) {
       const res = await fetch("./Merged_ISO_Clauses.json");
       const json = await res.json();
       const data = json.Merged_Standards || [];
       const code = stdName.match(/\d{4,5}/)[0];
       const clauses = data.filter(c => c.Standard && c.Standard.includes(code));
-      const modalLabel = document.getElementById("clauseModalLabel");
       const container = document.getElementById("clauseContainer");
+      const modalLabel = document.getElementById("clauseModalLabel");
 
       modalLabel.textContent = stdName;
-      if (!clauses.length) { container.innerHTML = `<p>No clauses found.</p>`; }
-      else {
+
+      if (!clauses.length) {
+        container.innerHTML = `<p>No clauses found.</p>`;
+      } else {
         container.innerHTML = clauses.map((c,i)=>`
-          <div class="accordion mb-2">
+          <div class="accordion mb-2 clause-item">
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#cl-${i}">
@@ -260,6 +273,15 @@
             </div>
           </div>`).join("");
       }
+
+      // Live search inside modal
+      const searchBox = document.getElementById("clauseSearch");
+      searchBox.addEventListener("input", e => {
+        const val = e.target.value.toLowerCase();
+        document.querySelectorAll(".clause-item").forEach(item => {
+          item.style.display = item.textContent.toLowerCase().includes(val) ? "block" : "none";
+        });
+      });
 
       new bootstrap.Modal(document.getElementById("clauseModal")).show();
     }
