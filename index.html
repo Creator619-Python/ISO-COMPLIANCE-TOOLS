@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Integrated Management System (IMS) – Compliance Dashboard</title>
+  <title>IMS Compliance Dashboard</title>
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
   <style>
     :root {
       --bg-color: #f8f9fa;
@@ -31,14 +33,14 @@
       transition: background 0.5s, color 0.5s;
     }
 
-    .title {
-      font-weight: 700;
-      color: var(--primary);
-    }
+    .title { font-weight: 700; color: var(--primary); }
 
-    .search-bar {
-      max-width: 420px;
-      margin: 0 auto 30px auto;
+    .card-summary {
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px var(--shadow);
+      padding: 1rem;
+      background: var(--card-bg);
+      transition: background 0.5s;
     }
 
     .btn-standard {
@@ -46,37 +48,11 @@
       font-weight: 500;
       padding: 1rem;
       border-radius: 1rem;
-      transition: all 0.3s ease;
       box-shadow: 0 2px 6px var(--shadow);
+      transition: all 0.3s ease;
     }
 
-    .btn-standard:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 15px var(--shadow);
-    }
-
-    .card-summary {
-      border-radius: 1rem;
-      box-shadow: 0 2px 8px var(--shadow);
-      padding: 1rem;
-      background: var(--card-bg);
-      transition: background 0.5s, box-shadow 0.5s;
-    }
-
-    footer {
-      margin-top: 60px;
-      font-size: 0.9rem;
-      color: var(--text-color);
-    }
-
-    .fade-in {
-      animation: fadeIn 1s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .btn-standard:hover { transform: translateY(-3px); }
 
     .theme-toggle {
       position: fixed;
@@ -103,14 +79,13 @@
     <i class="fas fa-moon"></i>
   </button>
 
-  <div class="container text-center py-5 fade-in">
+  <div class="container text-center py-5">
     <h1 class="mb-3 title">Integrated Management System (IMS) Compliance Suite</h1>
-    <p class="lead mb-4">Track and visualize your overall compliance across multiple ISO standards.</p>
+    <p class="lead mb-4">Track and visualize compliance across all ISO standards.</p>
 
     <!-- Search -->
-    <div class="search-bar mb-5">
-      <input type="text" id="searchInput" class="form-control form-control-lg"
-        placeholder="🔍 Search for a standard (e.g., Quality, Risk, Safety)" />
+    <div class="mb-5" style="max-width:420px;margin:auto;">
+      <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="🔍 Search for a standard..." />
     </div>
 
     <!-- IMS Health -->
@@ -125,115 +100,26 @@
       </div>
     </div>
 
-    <!-- Bar Chart -->
+    <!-- Compliance Bar Chart -->
     <div class="row justify-content-center mb-5">
       <div class="col-md-10">
         <div class="card-summary p-4">
-          <h4 class="mb-3"><i class="fas fa-chart-bar"></i> Standard-wise Compliance Overview</h4>
+          <h4><i class="fas fa-chart-bar"></i> Standard-wise Compliance Overview</h4>
           <canvas id="complianceChart" height="120"></canvas>
         </div>
       </div>
     </div>
 
-    <!-- === ISO Standards Grid (Correct Paths) === -->
-    <div id="standardsGrid" class="row row-cols-1 row-cols-md-2 g-4">
-
-      <div class="col standard-card" data-name="9001 quality management">
-        <a href="./ISO-9001-2015/" class="btn btn-primary w-100 btn-standard">
-          <i class="fas fa-certificate"></i> ISO 9001:2015 – Quality Management
-          <div class="small mt-2" id="iso9001Progress">Compliance: --%</div>
-        </a>
-        <button class="btn btn-outline-secondary mt-2 w-100"
-          onclick="showClauses('ISO 9001:2015 – Quality Management')">
-          <i class="fas fa-book-open"></i> View Clauses
-        </button>
-      </div>
-
-      <div class="col standard-card" data-name="14001 environmental management">
-        <a href="./ISO-14001-2015/" class="btn btn-success w-100 btn-standard">
-          <i class="fas fa-leaf"></i> ISO 14001:2015 – Environmental Management
-          <div class="small mt-2" id="iso14001Progress">Compliance: --%</div>
-        </a>
-        <button class="btn btn-outline-secondary mt-2 w-100"
-          onclick="showClauses('ISO 14001:2015 – Environmental Management')">
-          <i class="fas fa-book-open"></i> View Clauses
-        </button>
-      </div>
-
-      <div class="col standard-card" data-name="45001 occupational health safety ohs">
-        <a href="./ISO-45001-2018/" class="btn btn-danger w-100 btn-standard">
-          <i class="fas fa-hard-hat"></i> ISO 45001:2018 – Occupational Health & Safety
-          <div class="small mt-2" id="iso45001Progress">Compliance: --%</div>
-        </a>
-        <button class="btn btn-outline-secondary mt-2 w-100"
-          onclick="showClauses('ISO 45001:2018 – Occupational Health & Safety')">
-          <i class="fas fa-book-open"></i> View Clauses
-        </button>
-      </div>
-
-      <div class="col standard-card" data-name="31000 risk management">
-        <a href="./ISO-31000-2018/" class="btn btn-secondary w-100 btn-standard">
-          <i class="fas fa-exclamation-triangle"></i> ISO 31000:2018 – Risk Management
-          <div class="small mt-2" id="iso31000Progress">Compliance: --%</div>
-        </a>
-        <button class="btn btn-outline-secondary mt-2 w-100"
-          onclick="showClauses('ISO 31000:2018 – Risk Management')">
-          <i class="fas fa-book-open"></i> View Clauses
-        </button>
-      </div>
-
-      <div class="col standard-card" data-name="22301 business continuity">
-        <a href="./ISO-22301-2019/" class="btn btn-info w-100 btn-standard">
-          <i class="fas fa-shield-alt"></i> ISO 22301:2019 – Business Continuity
-          <div class="small mt-2" id="iso22301Progress">Compliance: --%</div>
-        </a>
-        <button class="btn btn-outline-secondary mt-2 w-100"
-          onclick="showClauses('ISO 22301:2019 – Business Continuity')">
-          <i class="fas fa-book-open"></i> View Clauses
-        </button>
-      </div>
-
-      <div class="col standard-card" data-name="27001 information security">
-        <a href="./ISO-27001-2022/" class="btn btn-dark w-100 btn-standard">
-          <i class="fas fa-lock"></i> ISO 27001:2022 – Information Security
-          <div class="small mt-2" id="iso27001Progress">Compliance: --%</div>
-        </a>
-        <button class="btn btn-outline-secondary mt-2 w-100"
-          onclick="showClauses('ISO 27001:2022 – Information Security')">
-          <i class="fas fa-book-open"></i> View Clauses
-        </button>
-      </div>
-
-      <div class="col standard-card" data-name="50001 energy management">
-        <a href="./ISO-50001-2018/" class="btn btn-warning w-100 btn-standard">
-          <i class="fas fa-bolt"></i> ISO 50001:2018 – Energy Management
-          <div class="small mt-2" id="iso50001Progress">Compliance: --%</div>
-        </a>
-        <button class="btn btn-outline-secondary mt-2 w-100"
-          onclick="showClauses('ISO 50001:2018 – Energy Management')">
-          <i class="fas fa-book-open"></i> View Clauses
-        </button>
-      </div>
-
-      <div class="col standard-card" data-name="26000 social responsibility csr sustainability">
-        <a href="./ISO-26000-2010/" class="btn btn-outline-primary w-100 btn-standard">
-          <i class="fas fa-hand-holding-heart"></i> ISO 26000:2010 – Social Responsibility
-          <div class="small mt-2" id="iso26000Progress">Compliance: --%</div>
-        </a>
-        <button class="btn btn-outline-secondary mt-2 w-100"
-          onclick="showClauses('ISO 26000:2010 – Social Responsibility')">
-          <i class="fas fa-book-open"></i> View Clauses
-        </button>
-      </div>
-    </div>
+    <!-- ISO Grid -->
+    <div id="standardsGrid" class="row row-cols-1 row-cols-md-2 g-4"></div>
 
     <!-- Clause Modal -->
     <div class="modal fade" id="clauseModal" tabindex="-1" aria-labelledby="clauseModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="clauseModalLabel">ISO Clauses</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 id="clauseModalLabel" class="modal-title">Clauses</h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body" id="clauseContainer"></div>
         </div>
@@ -241,69 +127,150 @@
     </div>
 
     <footer class="mt-5">
-      <p>Developed independently by <strong>Gokul T.B</strong> | IMS Compliance Tools | © 2025</p>
-      <p class="small">Open-source IMS dashboard for multi-standard compliance monitoring and visualization.</p>
+      <p>Developed independently by <strong>Gokul T.B</strong> | IMS Compliance Tools © 2025</p>
     </footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    /* === Search === */
-    document.getElementById("searchInput").addEventListener("keyup", function () {
-      const searchText = this.value.toLowerCase();
+    const standards = [
+      { name: "ISO 9001:2015 – Quality Management", folder: "ISO-9001-2015", color: "primary" },
+      { name: "ISO 14001:2015 – Environmental Management", folder: "ISO-14001-2015", color: "success" },
+      { name: "ISO 45001:2018 – Occupational Health & Safety", folder: "ISO-45001-2018", color: "danger" },
+      { name: "ISO 31000:2018 – Risk Management", folder: "ISO-31000-2018", color: "secondary" },
+      { name: "ISO 22301:2019 – Business Continuity", folder: "ISO-22301-2019", color: "info" },
+      { name: "ISO 27001:2022 – Information Security", folder: "ISO-27001-2022", color: "dark" },
+      { name: "ISO 50001:2018 – Energy Management", folder: "ISO-50001-2018", color: "warning" },
+      { name: "ISO 26000:2010 – Social Responsibility", folder: "ISO-26000-2010", color: "outline-primary" },
+    ];
+
+    const grid = document.getElementById("standardsGrid");
+
+    // === Search Filter ===
+    document.getElementById("searchInput").addEventListener("keyup", e => {
+      const q = e.target.value.toLowerCase();
       document.querySelectorAll(".standard-card").forEach(card => {
-        card.style.display = card.getAttribute("data-name").includes(searchText) ? "block" : "none";
+        card.style.display = card.dataset.name.includes(q) ? "block" : "none";
       });
     });
 
-    /* === Clause Display === */
-    async function showClauses(standardLabel) {
+    // === Load JSON and Calculate Compliance ===
+    fetch("./Merged_ISO_Clauses.json")
+      .then(res => res.json())
+      .then(json => {
+        const data = json.Merged_Standards || [];
+        const scores = {};
+
+        // Group clauses by ISO
+        standards.forEach(std => {
+          const code = std.folder.match(/\d{4,5}/)[0];
+          const clauses = data.filter(c => c.Standard && c.Standard.includes(code));
+
+          if (clauses.length > 0) {
+            const compliant = clauses.filter(c => c.Compliance === "compliant").length;
+            const partial = clauses.filter(c => c.Compliance === "partial").length;
+            const total = clauses.length;
+            const percent = Math.round(((compliant + partial * 0.5) / total) * 100);
+            scores[std.name] = percent;
+          } else {
+            scores[std.name] = null;
+          }
+
+          // Add to grid
+          const div = document.createElement("div");
+          div.className = "col standard-card";
+          div.dataset.name = std.name.toLowerCase();
+          div.innerHTML = `
+            <a href="./${std.folder}/" class="btn btn-${std.color} w-100 btn-standard">
+              <i class="fas fa-certificate"></i> ${std.name}
+              <div class="small mt-2">Compliance: ${scores[std.name] ?? "--"}%</div>
+            </a>
+            <button class="btn btn-outline-secondary mt-2 w-100" onclick="showClauses('${std.name}')">
+              <i class="fas fa-book-open"></i> View Clauses
+            </button>
+          `;
+          grid.appendChild(div);
+        });
+
+        drawCharts(scores);
+      });
+
+    // === Charts ===
+    function drawCharts(scores) {
+      const validScores = Object.values(scores).filter(v => v !== null);
+      const avg = validScores.length ? Math.round(validScores.reduce((a,b)=>a+b,0)/validScores.length) : 0;
+
+      const color = avg >= 80 ? "#28a745" : avg >= 50 ? "#ffc107" : "#dc3545";
+      document.getElementById("overallIMSScore").innerHTML = `<span style="color:${color}">${avg}%</span>`;
+      document.getElementById("healthMessage").textContent =
+        avg >= 80 ? "Excellent IMS health – well integrated." :
+        avg >= 50 ? "Moderate IMS health – needs improvement." :
+        "IMS health below optimal – attention required.";
+
+      const pieCtx = document.getElementById("overallPieChart").getContext("2d");
+      const barCtx = document.getElementById("complianceChart").getContext("2d");
+
+      new Chart(pieCtx, {
+        type: "doughnut",
+        data: { labels: ["Compliant", "Pending"], datasets: [{ data: [avg, 100-avg], backgroundColor: [color, "#e9ecef"] }] },
+        options: { cutout: "70%", plugins: { legend: { display: false } } }
+      });
+
+      new Chart(barCtx, {
+        type: "bar",
+        data: {
+          labels: Object.keys(scores),
+          datasets: [{ label: "Compliance %", data: Object.values(scores),
+            backgroundColor: Object.values(scores).map(v => v>=80?"#28a745":v>=50?"#ffc107":"#dc3545") }]
+        },
+        options: { scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
+      });
+    }
+
+    // === Show Clauses ===
+    async function showClauses(stdName) {
+      const res = await fetch("./Merged_ISO_Clauses.json");
+      const json = await res.json();
+      const data = json.Merged_Standards || [];
+      const code = stdName.match(/\d{4,5}/)[0];
+      const clauses = data.filter(c => c.Standard && c.Standard.includes(code));
       const modalLabel = document.getElementById("clauseModalLabel");
-      const clauseContainer = document.getElementById("clauseContainer");
-      modalLabel.textContent = `Clauses – ${standardLabel}`;
-      clauseContainer.innerHTML = "<p>Loading clauses...</p>";
+      const container = document.getElementById("clauseContainer");
 
-      try {
-        const res = await fetch("./Merged_ISO_Clauses.json");
-        const json = await res.json();
-
-        const codeMatch = standardLabel.match(/\d{4,5}/);
-        const code = codeMatch ? codeMatch[0] : null;
-
-        const clauses = (json.Merged_Standards || []).filter(c =>
-          c.Standard && code && c.Standard.includes(code)
-        );
-
-        if (!clauses.length) {
-          clauseContainer.innerHTML = `<p class="text-muted">No clauses found for ${standardLabel}.</p>`;
-        } else {
-          clauseContainer.innerHTML = `
-            <div class="accordion" id="accordionClauses">
-              ${clauses.map((c, i) => `
-                <div class="accordion-item mb-2">
-                  <h2 class="accordion-header" id="heading-${i}">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${i}">
-                      Clause ${c.Clause}: ${c.Title}
-                    </button>
-                  </h2>
-                  <div id="collapse-${i}" class="accordion-collapse collapse">
-                    <div class="accordion-body text-start">
-                      <p><strong>Purpose:</strong> ${c.Purpose || '-'}</p>
-                      <p><strong>Evidence:</strong> ${c.Evidence || '-'}</p>
-                      <p><strong>Integration:</strong> ${c.Integration || '-'}</p>
-                      <p><strong>Example:</strong> ${c.Example || '-'}</p>
-                    </div>
-                  </div>
-                </div>`).join("")}
-            </div>`;
-        }
-      } catch (err) {
-        clauseContainer.innerHTML = `<p class="text-danger">Error loading clauses: ${err.message}</p>`;
+      modalLabel.textContent = stdName;
+      if (!clauses.length) { container.innerHTML = `<p>No clauses found.</p>`; }
+      else {
+        container.innerHTML = clauses.map((c,i)=>`
+          <div class="accordion mb-2">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#cl-${i}">
+                  Clause ${c.Clause}: ${c.Title || "Untitled"}
+                </button>
+              </h2>
+              <div id="cl-${i}" class="accordion-collapse collapse">
+                <div class="accordion-body text-start">
+                  <p><strong>Purpose:</strong> ${c.Purpose || "-"}</p>
+                  <p><strong>Evidence:</strong> ${c.Evidence || "-"}</p>
+                  <p><strong>Integration:</strong> ${c.Integration || "-"}</p>
+                  <p><strong>Example:</strong> ${c.Example || "-"}</p>
+                </div>
+              </div>
+            </div>
+          </div>`).join("");
       }
 
       new bootstrap.Modal(document.getElementById("clauseModal")).show();
     }
+
+    // === Theme Toggle ===
+    const toggle = document.getElementById("themeToggle");
+    toggle.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+      toggle.innerHTML = document.body.classList.contains("dark-mode")
+        ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    });
   </script>
 </body>
 </html>
