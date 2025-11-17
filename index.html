@@ -105,18 +105,12 @@
 
   <div class="container text-center py-5 fade-in">
     <h1 class="mb-3 title">Integrated Management System (IMS) Compliance Suite</h1>
-    <p class="lead mb-4">
-      Track and visualize your overall compliance across multiple ISO standards.
-    </p>
+    <p class="lead mb-4">Track and visualize your overall compliance across multiple ISO standards.</p>
 
     <!-- Search -->
     <div class="search-bar mb-5">
-      <input
-        type="text"
-        id="searchInput"
-        class="form-control form-control-lg"
-        placeholder="🔍 Search for a standard (e.g., Quality, Risk, Safety)"
-      />
+      <input type="text" id="searchInput" class="form-control form-control-lg"
+        placeholder="🔍 Search for a standard (e.g., Quality, Risk, Safety)" />
     </div>
 
     <!-- IMS Health -->
@@ -141,15 +135,16 @@
       </div>
     </div>
 
-    <!-- ISO Grid -->
+    <!-- === ISO Standards Grid (Correct Paths) === -->
     <div id="standardsGrid" class="row row-cols-1 row-cols-md-2 g-4">
-      <!-- Each card has corrected href -->
+
       <div class="col standard-card" data-name="9001 quality management">
         <a href="./ISO-9001-2015/" class="btn btn-primary w-100 btn-standard">
           <i class="fas fa-certificate"></i> ISO 9001:2015 – Quality Management
           <div class="small mt-2" id="iso9001Progress">Compliance: --%</div>
         </a>
-        <button class="btn btn-outline-secondary mt-2 w-100" onclick="showClauses('ISO 9001:2015 – Quality Management')">
+        <button class="btn btn-outline-secondary mt-2 w-100"
+          onclick="showClauses('ISO 9001:2015 – Quality Management')">
           <i class="fas fa-book-open"></i> View Clauses
         </button>
       </div>
@@ -159,7 +154,8 @@
           <i class="fas fa-leaf"></i> ISO 14001:2015 – Environmental Management
           <div class="small mt-2" id="iso14001Progress">Compliance: --%</div>
         </a>
-        <button class="btn btn-outline-secondary mt-2 w-100" onclick="showClauses('ISO 14001:2015 – Environmental Management')">
+        <button class="btn btn-outline-secondary mt-2 w-100"
+          onclick="showClauses('ISO 14001:2015 – Environmental Management')">
           <i class="fas fa-book-open"></i> View Clauses
         </button>
       </div>
@@ -169,7 +165,8 @@
           <i class="fas fa-hard-hat"></i> ISO 45001:2018 – Occupational Health & Safety
           <div class="small mt-2" id="iso45001Progress">Compliance: --%</div>
         </a>
-        <button class="btn btn-outline-secondary mt-2 w-100" onclick="showClauses('ISO 45001:2018 – Occupational Health & Safety')">
+        <button class="btn btn-outline-secondary mt-2 w-100"
+          onclick="showClauses('ISO 45001:2018 – Occupational Health & Safety')">
           <i class="fas fa-book-open"></i> View Clauses
         </button>
       </div>
@@ -179,7 +176,8 @@
           <i class="fas fa-exclamation-triangle"></i> ISO 31000:2018 – Risk Management
           <div class="small mt-2" id="iso31000Progress">Compliance: --%</div>
         </a>
-        <button class="btn btn-outline-secondary mt-2 w-100" onclick="showClauses('ISO 31000:2018 – Risk Management')">
+        <button class="btn btn-outline-secondary mt-2 w-100"
+          onclick="showClauses('ISO 31000:2018 – Risk Management')">
           <i class="fas fa-book-open"></i> View Clauses
         </button>
       </div>
@@ -189,7 +187,8 @@
           <i class="fas fa-shield-alt"></i> ISO 22301:2019 – Business Continuity
           <div class="small mt-2" id="iso22301Progress">Compliance: --%</div>
         </a>
-        <button class="btn btn-outline-secondary mt-2 w-100" onclick="showClauses('ISO 22301:2019 – Business Continuity')">
+        <button class="btn btn-outline-secondary mt-2 w-100"
+          onclick="showClauses('ISO 22301:2019 – Business Continuity')">
           <i class="fas fa-book-open"></i> View Clauses
         </button>
       </div>
@@ -199,7 +198,8 @@
           <i class="fas fa-lock"></i> ISO 27001:2022 – Information Security
           <div class="small mt-2" id="iso27001Progress">Compliance: --%</div>
         </a>
-        <button class="btn btn-outline-secondary mt-2 w-100" onclick="showClauses('ISO 27001:2022 – Information Security')">
+        <button class="btn btn-outline-secondary mt-2 w-100"
+          onclick="showClauses('ISO 27001:2022 – Information Security')">
           <i class="fas fa-book-open"></i> View Clauses
         </button>
       </div>
@@ -209,7 +209,8 @@
           <i class="fas fa-bolt"></i> ISO 50001:2018 – Energy Management
           <div class="small mt-2" id="iso50001Progress">Compliance: --%</div>
         </a>
-        <button class="btn btn-outline-secondary mt-2 w-100" onclick="showClauses('ISO 50001:2018 – Energy Management')">
+        <button class="btn btn-outline-secondary mt-2 w-100"
+          onclick="showClauses('ISO 50001:2018 – Energy Management')">
           <i class="fas fa-book-open"></i> View Clauses
         </button>
       </div>
@@ -219,7 +220,8 @@
           <i class="fas fa-hand-holding-heart"></i> ISO 26000:2010 – Social Responsibility
           <div class="small mt-2" id="iso26000Progress">Compliance: --%</div>
         </a>
-        <button class="btn btn-outline-secondary mt-2 w-100" onclick="showClauses('ISO 26000:2010 – Social Responsibility')">
+        <button class="btn btn-outline-secondary mt-2 w-100"
+          onclick="showClauses('ISO 26000:2010 – Social Responsibility')">
           <i class="fas fa-book-open"></i> View Clauses
         </button>
       </div>
